@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include <TinyGPSPlus.h>
 #include <SoftwareSerial.h>
+#include "firebase-interface.h"
+
 /*
    This sample code demonstrates the normal use of a TinyGPSPlus (TinyGPSPlus) object.
    It requires the use of SoftwareSerial, and assumes that you have a
@@ -16,7 +18,15 @@
 
 // The serial connection to the GPS device
 // SoftwareSerial ss(RXPin, TXPin);
+
+
+
 extern SoftwareSerial ss;
+
+struct location {
+   int lat;
+   int lng;
+};
 
 void gpssetup();
 
@@ -27,10 +37,15 @@ void gpsloop();
 // is being "fed".
 void smartDelay(unsigned long ms);
 
-void printFloat(float val, bool valid, int len, int prec);
+location getLocation(); 
 
-void printInt(unsigned long val, bool valid, int len);
+void sendLocationData(location locationData);
 
-void printDateTime(TinyGPSDate &d, TinyGPSTime &t);
 
-void printStr(const char *str, int len);
+// void printFloat(float val, bool valid, int len, int prec);
+
+// void printInt(unsigned long val, bool valid, int len);
+
+// void printDateTime(TinyGPSDate &d, TinyGPSTime &t);
+
+// void printStr(const char *str, int len);
