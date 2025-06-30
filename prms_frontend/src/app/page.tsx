@@ -9,7 +9,7 @@ import MapComponent, {
 } from "@/components/MapComponent/MapComponent";
 import { MARKER_PROP_TYPE } from "@/components/CustomMarker/CustomMarker";
 import { BUS_TYPE, DESIRED_TRIP_TYPE, LAT_LNG_TYPE } from "@/types";
-import { getTripById } from "@/api/firebaseQueries";
+// import { getTripById } from "@/api/firebaseQueries";
 import { createBusStop, createTrip } from "@/api/firebaseMutations";
 import { doc, onSnapshot } from "firebase/firestore";
 import { firebaseDb } from "@/utils/firebase";
@@ -27,10 +27,10 @@ enum EDITING_ID {
   GEOFENCE,
 }
 
-type ROUTE_PLOT_DISPLAY_STATUS = {
-  ACTUAL: boolean;
-  EXPECTED: boolean;
-};
+// type ROUTE_PLOT_DISPLAY_STATUS = {
+//   ACTUAL: boolean;
+//   EXPECTED: boolean;
+// };
 
 const tripId = "Kd0yo2TYAKy1yVkqKPk1";
 const busId = "321YJTfs0EEGOuzkrNEw";
@@ -50,12 +50,12 @@ function Home() {
     google.maps.DirectionsResult | undefined
   >(undefined);
 
-  const [expectedRouteData, setExpectedRouteData] = useState<
-    LAT_LNG_TYPE[] | null
-  >(null);
-  const [actualRouteData, setActualRouteData] = useState<LAT_LNG_TYPE[] | null>(
-    null
-  );
+  // const [expectedRouteData, setExpectedRouteData] = useState<
+  //   LAT_LNG_TYPE[] | null
+  // >(null);
+  // const [actualRouteData, setActualRouteData] = useState<LAT_LNG_TYPE[] | null>(
+  //   null
+  // );
 
   const [geofenceBound, setGeofenceBound] = useState<RECTANGLE_BOUND | null>(
     null
@@ -68,11 +68,11 @@ function Home() {
     duration: string;
   } | null>(null);
 
-  const [routePlotStatus, setRoutePlotStatus] =
-    useState<ROUTE_PLOT_DISPLAY_STATUS>({
-      ACTUAL: true,
-      EXPECTED: true,
-    });
+  // const [routePlotStatus, setRoutePlotStatus] =
+  //   useState<ROUTE_PLOT_DISPLAY_STATUS>({
+  //     ACTUAL: true,
+  //     EXPECTED: true,
+  //   });
 
   const directionsCallback = useCallback(function (
     res: google.maps.DirectionsResult | null
@@ -249,12 +249,12 @@ function Home() {
     }
   };
 
-  const toggleRoutePlotStatus = (routeId: "ACTUAL" | "EXPECTED") => {
-    setRoutePlotStatus((prev) => ({
-      ACTUAL: routeId === "ACTUAL" ? !prev.ACTUAL : prev.ACTUAL,
-      EXPECTED: routeId === "EXPECTED" ? !prev.EXPECTED : prev.EXPECTED,
-    }));
-  };
+  // const toggleRoutePlotStatus = (routeId: "ACTUAL" | "EXPECTED") => {
+  //   setRoutePlotStatus((prev) => ({
+  //     ACTUAL: routeId === "ACTUAL" ? !prev.ACTUAL : prev.ACTUAL,
+  //     EXPECTED: routeId === "EXPECTED" ? !prev.EXPECTED : prev.EXPECTED,
+  //   }));
+  // };
 
   useEffect(() => {
     const call = async () => {
@@ -340,29 +340,29 @@ function Home() {
   const getAllRoutesToPlot = () => {
     const routesToPlot: PLOT_ROUTE_TYPE[] = [];
 
-    if (expectedRouteData) {
-      routesToPlot.push({
-        origin: expectedRouteData[0],
-        originLabel: "Origin",
-        destination: expectedRouteData[expectedRouteData.length - 1],
-        destinationLabel: "Destination",
-        path: expectedRouteData,
-        color: "#FF0000",
-        visible: routePlotStatus.EXPECTED,
-      });
-    }
+    // if (expectedRouteData) {
+    //   routesToPlot.push({
+    //     origin: expectedRouteData[0],
+    //     originLabel: "Origin",
+    //     destination: expectedRouteData[expectedRouteData.length - 1],
+    //     destinationLabel: "Destination",
+    //     path: expectedRouteData,
+    //     color: "#FF0000",
+    //     visible: routePlotStatus.EXPECTED,
+    //   });
+    // }
 
-    if (actualRouteData) {
-      routesToPlot.push({
-        origin: actualRouteData[0],
-        originLabel: "Actual Origin",
-        destination: actualRouteData[actualRouteData.length - 1],
-        destinationLabel: "Current Postion",
-        path: actualRouteData,
-        color: "#008000",
-        visible: routePlotStatus.ACTUAL,
-      });
-    }
+    // if (actualRouteData) {
+    //   routesToPlot.push({
+    //     origin: actualRouteData[0],
+    //     originLabel: "Actual Origin",
+    //     destination: actualRouteData[actualRouteData.length - 1],
+    //     destinationLabel: "Current Postion",
+    //     path: actualRouteData,
+    //     color: "#008000",
+    //     visible: routePlotStatus.ACTUAL,
+    //   });
+    // }
 
     return routesToPlot;
   };
@@ -441,7 +441,7 @@ function Home() {
                 disabled={submitingNewBusStop || !newBusStop}
               />
             </div>
-            {actualRouteData && expectedRouteData && (
+            {/* {actualRouteData && expectedRouteData && (
               <div className="flex items-center justify-center gap-x-2 mb-2">
                 <Button
                   onClick={() => toggleRoutePlotStatus("ACTUAL")}
@@ -454,7 +454,7 @@ function Home() {
                   mode={routePlotStatus.EXPECTED ? "FILL" : "OUTLINE"}
                 />
               </div>
-            )}
+            )} */}
           </div>
           <div>
             {routedistDur && (
