@@ -4,10 +4,11 @@ import {
   GoogleMap,
   useJsApiLoader,
 } from "@react-google-maps/api";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import PlotRoute, { PLOT_ROUTE_TYPE } from "../PlotRoute/PlotRoute";
 import { LAT_LNG_TYPE } from "@/types";
 import CustomMarker, { MARKER_PROP_TYPE } from "../CustomMarker/CustomMarker";
+import { RECTANGLE_BOUND } from "@/utils/utils";
 
 const containerStyle = {
   width: "100%",
@@ -24,10 +25,11 @@ type PropType = {
   center: LAT_LNG_TYPE;
   actionMode?: ACTION_TYPES;
   onSelectPoint: (e: google.maps.MapMouseEvent) => void;
-  onDrawRectangle: (rectangle: google.maps.Rectangle) => void;
+  onDrawRectangle: (rectangleBound: RECTANGLE_BOUND) => void;
   directionResult?: google.maps.DirectionsResult; // [FIX]! change to plot route component
   markers: MARKER_PROP_TYPE[];
   routesToPlot: PLOT_ROUTE_TYPE[];
+  isWithinGeoFence?: boolean;
 };
 
 const MapComponent: React.FC<PropType> = ({
@@ -38,8 +40,12 @@ const MapComponent: React.FC<PropType> = ({
   directionResult,
   markers,
   routesToPlot,
+  isWithinGeoFence,
 }) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const geofenceRectRef = useRef<google.maps.Rectangle | null>(null);
+  const rectChangesEventListenerRef =
+    useRef<google.maps.MapsEventListener | null>(null);
 
   const onLoad = useCallback(function callback(map: google.maps.Map) {
     // This is just an example of getting and using the map instance!!! don't just blindly copy!
@@ -60,7 +66,44 @@ const MapComponent: React.FC<PropType> = ({
     libraries: ["drawing"],
   });
 
-  console.log("HEYYY kkk", actionMode);
+  const handleGeofenceRectChange = () => {
+    if (geofenceRectRef.current) {
+      const res = geofenceRectRef.current.getBounds();
+
+      if (res) {
+        onDrawRectangle({
+          southWest: res.getSouthWest().toJSON(),
+          northEast: res.getNorthEast().toJSON(),
+        });
+      }
+    }
+  };
+
+  const onRectangleComplete = (rect: google.maps.Rectangle) => {
+    geofenceRectRef.current = rect;
+
+    if (rectChangesEventListenerRef.current) {
+      rectChangesEventListenerRef.current.remove();
+    }
+
+    rectChangesEventListenerRef.current = rect.addListener(
+      "bounds_changed",
+      handleGeofenceRectChange
+    );
+
+    handleGeofenceRectChange();
+  };
+
+  useEffect(() => {
+    if (!geofenceRectRef.current) return;
+    const color = isWithinGeoFence ? "#008000" : "#FF0000";
+
+    geofenceRectRef.current.setOptions({
+      strokeColor: color,
+      fillColor: color,
+    });
+  }, [isWithinGeoFence, geofenceRectRef]);
+
   return (
     <>
       {isLoaded && (
@@ -88,24 +131,25 @@ const MapComponent: React.FC<PropType> = ({
             <PlotRoute key={route.path.toString()} {...route} />
           ))}
 
-          {actionMode === ACTION_TYPES.DRAWING_RECTANGLE ? (
-            <DrawingManager
-              drawingMode={
-                actionMode === ACTION_TYPES.DRAWING_RECTANGLE
-                  ? google.maps.drawing.OverlayType.RECTANGLE
-                  : null
-              }
-              onRectangleComplete={onDrawRectangle}
-              options={{
-                rectangleOptions: {
-                  editable: true,
-                  draggable: true,
-                  strokeColor: "#008000",
-                  fillColor: "#008000",
-                },
-              }}
-            />
-          ) : null}
+          {/* {actionMode === ACTION_TYPES.DRAWING_RECTANGLE ? ( */}
+          <DrawingManager
+            drawingMode={
+              actionMode === ACTION_TYPES.DRAWING_RECTANGLE
+                ? google.maps.drawing.OverlayType.RECTANGLE
+                : null
+            }
+            onRectangleComplete={onRectangleComplete}
+            options={{
+              drawingControl: false,
+              rectangleOptions: {
+                editable: true,
+                draggable: true,
+                strokeColor: "#008000",
+                fillColor: "#008000",
+              },
+            }}
+          />
+          {/* ) : null} */}
         </GoogleMap>
       )}
     </>

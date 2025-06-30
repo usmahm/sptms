@@ -30,7 +30,7 @@ const PlotRoute: React.FC<PLOT_ROUTE_TYPE> = ({
     strokeWeight: 5,
   };
 
-  console.log("RENDERING " + count, path);
+  // console.log("RENDERING " + count, path);
   count = count + 1;
 
   return (

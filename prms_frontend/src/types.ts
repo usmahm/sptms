@@ -27,3 +27,8 @@ export type BUS_STOP_TYPE = {
   location: LAT_LNG_TYPE;
   name: string;
 };
+
+export type BUS_TYPE = {
+  bus_reg_no: string;
+  location: LAT_LNG_TYPE;
+}

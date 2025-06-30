@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <TinyGPSPlus.h>
 #include <SoftwareSerial.h>
-#include "firebase-interface.h"
+// #include "firebase-interface.h"
 
 /*
    This sample code demonstrates the normal use of a TinyGPSPlus (TinyGPSPlus) object.
@@ -24,9 +24,11 @@
 extern SoftwareSerial ss;
 
 struct location {
-   int lat;
-   int lng;
+   String lat;
+   String lng;
 };
+
+extern location locationData;
 
 void gpssetup();
 
@@ -37,9 +39,10 @@ void gpsloop();
 // is being "fed".
 void smartDelay(unsigned long ms);
 
-location getLocation(); 
+bool getLocation(); 
+// location getLocation(); 
 
-void sendLocationData(location locationData);
+// void sendLocationData(location locationData);
 
 
 // void printFloat(float val, bool valid, int len, int prec);

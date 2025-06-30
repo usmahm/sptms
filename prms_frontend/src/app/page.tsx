@@ -8,9 +8,12 @@ import MapComponent, {
   ACTION_TYPES,
 } from "@/components/MapComponent/MapComponent";
 import { MARKER_PROP_TYPE } from "@/components/CustomMarker/CustomMarker";
-import { DESIRED_TRIP_TYPE, LAT_LNG_TYPE } from "@/types";
+import { BUS_TYPE, DESIRED_TRIP_TYPE, LAT_LNG_TYPE } from "@/types";
 import { getTripById } from "@/api/firebaseQueries";
 import { createBusStop, createTrip } from "@/api/firebaseMutations";
+import { doc, onSnapshot } from "firebase/firestore";
+import { firebaseDb } from "@/utils/firebase";
+import { checkIfBoundContains, RECTANGLE_BOUND } from "@/utils/utils";
 
 const center = {
   lat: 7.501217,
@@ -30,11 +33,14 @@ type ROUTE_PLOT_DISPLAY_STATUS = {
 };
 
 const tripId = "Kd0yo2TYAKy1yVkqKPk1";
+const busId = "321YJTfs0EEGOuzkrNEw";
 
 function Home() {
   const [editingId, setEditingId] = useState<EDITING_ID | null>(null);
   const [desiredTrip, setDesiredTrip] = useState<DESIRED_TRIP_TYPE>({});
   const [newBusStop, setNewBusStop] = useState<LAT_LNG_TYPE | null>(null);
+
+  const [busData, setBusData] = useState<BUS_TYPE | null>(null);
 
   const [loadingRoute, setLoadingRoute] = useState(false);
   const [submitingTripRoute, setSubmitingTripRoute] = useState(false);
@@ -50,6 +56,11 @@ function Home() {
   const [actualRouteData, setActualRouteData] = useState<LAT_LNG_TYPE[] | null>(
     null
   );
+
+  const [geofenceBound, setGeofenceBound] = useState<RECTANGLE_BOUND | null>(
+    null
+  );
+  const [isWithinGeoFence, setIsWithinGeoFence] = useState(true);
   // const [busStops, setbusStops] = useState<BUS_STOP_TYPE[] | null>(null);
 
   const [routedistDur, setRoutedistDur] = useState<{
@@ -99,6 +110,8 @@ function Home() {
       if (editingId === null || !e.latLng) return;
 
       const latLng = e.latLng.toJSON();
+
+      console.log("HEYYY 555", latLng);
 
       if (
         editingId === EDITING_ID.ORIGIN ||
@@ -216,7 +229,6 @@ function Home() {
   }
 
   const newBusStopSubmitHandler = async () => {
-    console.log("HEYYYEYEYE");
     setSubmitingNewBusStop(true);
 
     try {
@@ -246,19 +258,50 @@ function Home() {
 
   useEffect(() => {
     const call = async () => {
-      const trip = await getTripById(tripId);
-
-      console.log("HEYYY 4444", trip);
-      if (trip) {
-        setExpectedRouteData(trip.expected_path);
-        setActualRouteData(trip.actual_path);
-      } else {
-        toast.error("Trip doesn't exist!");
-      }
+      // const trip = await getTripById(tripId);
+      // if (trip) {
+      //   setExpectedRouteData(trip.expected_path);
+      //   setActualRouteData(trip.actual_path);
+      // } else {
+      //   toast.error("Trip doesn't exist!");
+      // }
     };
 
+    const unsub = onSnapshot(
+      doc(firebaseDb, "bus_nodes", busId),
+      (doc) => {
+        console.log("HEYYY 111qq", doc.data());
+        const data = doc.data();
+
+        if (data) {
+          setBusData(data as BUS_TYPE);
+        }
+      },
+      (err) => console.log("Error", err)
+    );
+
     call();
+
+    return () => unsub();
   }, []);
+
+  useEffect(() => {
+    if (geofenceBound && busData) {
+      const isWithin = checkIfBoundContains(geofenceBound, busData.location);
+      console.log("HEYYY isis", isWithin);
+
+      if (!isWithinGeoFence && isWithin) {
+        toast.success(`Bus: "${busData.bus_reg_no}" entering designated zone`);
+      } else if (isWithinGeoFence && !isWithin) {
+        toast.error(`Bus: "${busData.bus_reg_no}" leaving designated zone!`);
+      }
+
+      setIsWithinGeoFence(isWithin);
+      // if (!isWithin) {
+      //   toast.error("Bus out of designated region!");
+      // }
+    }
+  }, [busData, geofenceBound, isWithinGeoFence]);
 
   const getAllMarkersToRender = () => {
     const markers: MARKER_PROP_TYPE[] = [];
@@ -282,6 +325,12 @@ function Home() {
         label: "New Bus Stop",
         position: newBusStop,
         onDragEnd: (e) => markerDragHandler(e, EDITING_ID.NEW_BUS_STOP),
+      });
+    }
+    if (busData) {
+      markers.push({
+        label: busData.bus_reg_no,
+        position: busData.location,
       });
     }
 
@@ -337,8 +386,6 @@ function Home() {
       default:
         break;
     }
-
-    console.log("HEYYY 777", actionMode);
 
     return actionMode;
   };
@@ -432,18 +479,11 @@ function Home() {
             directionResult={fetchedRoute}
             markers={markers}
             routesToPlot={routesToPlot}
-            onDrawRectangle={(rec) => {
-              const res = rec.getBounds();
-              if (res) {
-                console.log(
-                  "HEYYY 111",
-                  res,
-                  // res.contains(),
-                  res.getCenter().toJSON(),
-                  res.getNorthEast()
-                );
-              }
+            onDrawRectangle={(rectBound) => {
+              setGeofenceBound(rectBound);
+              setEditingId(null);
             }}
+            isWithinGeoFence={isWithinGeoFence}
           />
         </div>
       </div>

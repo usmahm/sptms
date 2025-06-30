@@ -1,4 +1,5 @@
 #include "firebase-interface.h"
+#include "env.h"
 
 
 WiFiClientSecure ssl_client;
@@ -17,8 +18,8 @@ Firestore::Documents Docs;
 // RealtimeDatabase Database;
 
 // Timer variables for sending data every 10 seconds
-unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 10000; // 10 seconds in milliseconds
+// unsigned long lastSendTimet = 0;
+// const unsigned long sendIntervalt = 10000; // 10 seconds in milliseconds
 
 // Variables to send to the Database
 int intValue = 0;
@@ -51,7 +52,6 @@ void create_bus_node_auto_id()
 
 
 void firebaseSetup(){
-  // Serial.begin(115200);
 
   // Connect to Wi-Fi
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -69,7 +69,7 @@ void firebaseSetup(){
 
   // Initialize Firebase
   initializeApp(aClient, app, getAuth(user_auth), processData, "🔐 authTask");
-  app.getApp<RealtimeDatabase>(Database);
+  // app.getApp<RealtimeDatabase>(Database);
   app.getApp<Firestore::Documents>(Docs);
   Database.url(DATABASE_URL);
 }
@@ -79,20 +79,6 @@ bool sent = false;
 void firebaseLoop(){
   // Maintain authentication and async tasks
   app.loop();
-
-  // Check if authentication is ready
-  if (app.ready()){
-    // Periodic data sending every 10 seconds
-    unsigned long currentTime = millis();
-    if (currentTime - lastSendTime >= sendInterval){
-      // create_bus_node_auto_id();
-    }
-
-    // if (!sent) {
-    //   sendLocationData();
-    //   sent = true;
-    // }
-  }
 }
 
 void processData(AsyncResult &aResult){
@@ -112,25 +98,45 @@ void processData(AsyncResult &aResult){
     Firebase.printf("task: %s, payload: %s\n", aResult.uid().c_str(), aResult.c_str());
 }
 
-void sendLocationData(location locationData)
+void sendLocationData(location locData)
 {
-  String documentPath = "trips/BYeZnxReA3OmQxt7Yge4";
-
-  // Values::ArrayTransformValue arrayTRansform("path");
-  // Values::StringValue routeName("New Name");
-  // Document<Values::Value> doc("route_name", Values::Value(routeName));
-
-  Values::MapValue point("lat", Values::StringValue(String(locationData.lat)));
-  point.add("long", Values::StringValue(String(locationData.lng)));
-  Values::ArrayValue pathArray(point);
-  // pathArray.add(point);
-
-  Document<Values::Value> doc("path", Values::Value(pathArray));
-
-  PatchDocumentOptions patchOptions(DocumentMask("path"), DocumentMask(), Precondition());
-
-  Serial.println("Updating a document... ");
-
-  Docs.patch(aClient, Firestore::Parent(PROJECT_ID), documentPath, patchOptions, doc, processData, "patchTask");
-
+  if (app.ready()){
+    String documentPath = "bus_nodes/321YJTfs0EEGOuzkrNEw";
+  
+    Values::MapValue point("lat", Values::StringValue(locData.lat));
+    point.add("lng", Values::StringValue(locData.lng));
+    
+    Values::StringValue stringV("BUS_101");
+    Document<Values::Value> doc("location", Values::Value(point));
+    // doc.add("bus_reg_no", Values::Value(stringV));
+  
+    PatchDocumentOptions patchOptions(DocumentMask("location"), DocumentMask(), Precondition());
+  
+    Serial.println("Updating a document... ");
+  
+    Docs.patch(aClient, Firestore::Parent(PROJECT_ID), documentPath, patchOptions, doc, processData, "patchTask");
+  }
 }
+
+// void sendLocationData(location locationData)
+// {
+//   String documentPath = "trips/BYeZnxReA3OmQxt7Yge4";
+
+//   // Values::ArrayTransformValue arrayTRansform("path");
+//   // Values::StringValue routeName("New Name");
+//   // Document<Values::Value> doc("route_name", Values::Value(routeName));
+
+//   Values::MapValue point("lat", Values::StringValue(String(locationData.lat)));
+//   point.add("long", Values::StringValue(String(locationData.lng)));
+//   Values::ArrayValue pathArray(point);
+//   // pathArray.add(point);
+
+//   Document<Values::Value> doc("path", Values::Value(pathArray));
+
+//   PatchDocumentOptions patchOptions(DocumentMask("path"), DocumentMask(), Precondition());
+
+//   Serial.println("Updating a document... ");
+
+//   Docs.patch(aClient, Firestore::Parent(PROJECT_ID), documentPath, patchOptions, doc, processData, "patchTask");
+
+// }
