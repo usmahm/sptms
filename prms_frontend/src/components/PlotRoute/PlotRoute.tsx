@@ -1,52 +1,28 @@
-import { Marker, Polyline } from "@react-google-maps/api";
+import { Polyline } from "@react-google-maps/api";
 import React from "react";
-
-const CustomMarker = ({
-  position,
-  label,
-  onDragEnd,
-  draggable,
-}: {
-  position: LAT_LNG_TYPE;
-  label: string;
-  draggable?: boolean;
-  onDragEnd?: (e: google.maps.MapMouseEvent) => void;
-}) => (
-  <Marker
-    // onLoad={onLoadMarker}
-    position={position}
-    label={{
-      text: label,
-      className: "absolute top-[15px] right-2/4 translate-x-2/4 font-bold",
-    }}
-    draggable={draggable}
-    onDragEnd={onDragEnd}
-  />
-);
-
-type LAT_LNG_TYPE = {
-  lat: number;
-  lng: number;
-};
+import CustomMarker from "../CustomMarker/CustomMarker";
+import { LAT_LNG_TYPE } from "@/types";
 
 let count = 0;
 
-const PlotRoute = ({
-  originLocation,
-  destinationLocation,
-  path,
-  visible,
-  color = "#FF0000",
-  originLabel = "Origin Bus Stop",
-  destinationLabel = "Destination Bus Stop",
-}: {
-  originLocation: LAT_LNG_TYPE;
-  destinationLocation: LAT_LNG_TYPE;
+export type PLOT_ROUTE_TYPE = {
+  origin: LAT_LNG_TYPE;
+  destination: LAT_LNG_TYPE;
   path: LAT_LNG_TYPE[];
   color?: string;
   originLabel?: string;
   destinationLabel?: string;
   visible: boolean;
+};
+
+const PlotRoute: React.FC<PLOT_ROUTE_TYPE> = ({
+  origin,
+  destination,
+  path,
+  visible,
+  color = "#FF0000",
+  originLabel = "Origin Bus Stop",
+  destinationLabel = "Destination Bus Stop",
 }) => {
   const pathOptions = {
     strokeColor: color,
@@ -63,12 +39,12 @@ const PlotRoute = ({
         <>
           <CustomMarker
             label={originLabel}
-            position={originLocation}
+            position={origin}
             draggable={false}
           />
           <CustomMarker
             label={destinationLabel}
-            position={destinationLocation}
+            position={destination}
             draggable={false}
           />
         </>
