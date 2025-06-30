@@ -12,7 +12,7 @@ void setup()
 
 // Timer variables for sending data every 10 seconds
 unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 10; // 10 seconds in milliseconds
+const unsigned long sendInterval = 1000; // 10 seconds in milliseconds
 
 void loop()
 {

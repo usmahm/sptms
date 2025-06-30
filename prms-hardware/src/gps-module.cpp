@@ -19,9 +19,13 @@ void gpssetup() {
 
 bool getLocation()
 {
-  if (gps.location.isUpdated()) {
+  // if (gps.location.isValid()) {
     locationData.lat = String(gps.location.lat(), 8);
     locationData.lng = String(gps.location.lng(), 8);
+    String time = String(gps.date.year()) + "/" + String(gps.date.month()) + "/" + String(gps.date.day()) + "," + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second());
+    locationData.time = time;
+    locationData.satellites = gps.satellites.value();
+    locationData.hdop = gps.hdop.value() / 100.0;
 
       Serial.print("LAT: ");
       Serial.println(gps.location.lat(), 6);
@@ -39,23 +43,27 @@ bool getLocation()
       Serial.println(String(gps.date.year()) + "/" + String(gps.date.month()) + "/" + String(gps.date.day()) + "," + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second()));
       Serial.println("");
     return true;
-  } else {
-      Serial.println("No data");
-      Serial.print("HDOP = "); 
-      Serial.println(gps.hdop.value() / 100.0); 
-      Serial.print("Satellites = "); 
-      Serial.println(gps.satellites.value()); 
-      Serial.print("Time in UTC: ");
-      Serial.println(String(gps.date.year()) + "/" + String(gps.date.month()) + "/" + String(gps.date.day()) + "," + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second()));
-      Serial.println("");
-    return false;
-  }
+  // } else {
+  //         Serial.print("LAT: ");
+  //     Serial.println(gps.location.lat(), 6);
+  //     Serial.print("LONG: "); 
+  //     Serial.println(gps.location.lng(), 6);
+  //     Serial.println("No data");
+  //     Serial.print("HDOP = "); 
+  //     Serial.println(gps.hdop.value() / 100.0); 
+  //     Serial.print("Satellites = "); 
+  //     Serial.println(gps.satellites.value()); 
+  //     Serial.print("Time in UTC: ");
+  //     Serial.println(String(gps.date.year()) + "/" + String(gps.date.month()) + "/" + String(gps.date.day()) + "," + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second()));
+  //     Serial.println("");
+  //   return false;
+  // }
 }
 
 
 void gpsloop()
 {
-    smartDelay(1000);
+  smartDelay(1000);
 
   if (millis() > 5000 && gps.charsProcessed() < 10)
     Serial.println(F("No GPS data received: check wiring"));
