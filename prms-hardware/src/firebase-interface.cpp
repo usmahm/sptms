@@ -28,27 +28,27 @@ String stringValue = "";
 
 UserAuth user_auth(Web_API_KEY, USER_EMAIL, USER_PASS);
 
-void create_bus_node_auto_id()
-{
-    Serial.println("Creating bus_node document with auto ID...");
+// void create_bus_node_auto_id()
+// {
+//     Serial.println("Creating bus_node document with auto ID...");
 
-    // Collection path only (no document ID)
-    String collectionId = "bus_nodes";
+//     // Collection path only (no document ID)
+//     String collectionId = "bus_nodes";
 
-    // Build your document data
-    Document<Values::Value> doc("bus_reg_no", Values::Value(Values::StringValue("BUS_101")));
+//     // Build your document data
+//     Document<Values::Value> doc("bus_reg_no", Values::Value(Values::StringValue("BUS_101")));
 
-    // This will auto-generate the document ID
-    Docs.createDocument(
-        aClient,
-        Firestore::Parent(PROJECT_ID), // project info
-        collectionId,                            // collection name
-        "",                                      // <- empty string means Firestore auto-generates document ID
-        DocumentMask(),
-        doc,
-        processData // or use processData for async callback
-    );
-}
+//     // This will auto-generate the document ID
+//     Docs.createDocument(
+//         aClient,
+//         Firestore::Parent(PROJECT_ID), // project info
+//         collectionId,                            // collection name
+//         "",                                      // <- empty string means Firestore auto-generates document ID
+//         DocumentMask(),
+//         doc,
+//         processData // or use processData for async callback
+//     );
+// }
 
 
 void firebaseSetup(){
@@ -98,23 +98,45 @@ void processData(AsyncResult &aResult){
     Firebase.printf("task: %s, payload: %s\n", aResult.uid().c_str(), aResult.c_str());
 }
 
+static Document<Values::Value> doc;
+static Values::MapValue point;
+
+
 void sendLocationData(location locData)
 {
   if (app.ready()){
+    Serial.println("Attempting Print");
+    
     String documentPath = "bus_nodes/321YJTfs0EEGOuzkrNEw";
   
-    Values::MapValue point("lat", Values::StringValue(locData.lat));
+    // Values::MapValue point("lat", Values::StringValue(locData.lat));
+    point.clear();
+    point.add("lat", Values::StringValue(locData.lat));
     point.add("lng", Values::StringValue(locData.lng));
+    point.add("time", Values::StringValue(locData.time));
+    point.add("satellites", Values::IntegerValue(locData.satellites));
+    point.add("hdop", Values::IntegerValue(locData.hdop));
     
     Values::StringValue stringV("BUS_101");
-    Document<Values::Value> doc("location", Values::Value(point));
-    // doc.add("bus_reg_no", Values::Value(stringV));
+    // Document<Values::Value> doc("location", Values::Value(point));
+    doc.clear();
+    // Document<Values::Value> doc("location", Values::Value(point));
+    doc.add("location", Values::Value(point));
   
     PatchDocumentOptions patchOptions(DocumentMask("location"), DocumentMask(), Precondition());
   
     Serial.println("Updating a document... ");
   
-    Docs.patch(aClient, Firestore::Parent(PROJECT_ID), documentPath, patchOptions, doc, processData, "patchTask");
+    String payload = Docs.patch(aClient, Firestore::Parent(PROJECT_ID), documentPath, patchOptions, doc);
+
+    if (aClient.lastError().code() == 0) {
+      Serial.println("Patched: ");
+      Serial.println(payload);
+    } else {
+      Firebase.printf("Error patching: %s (code %d)\n", aClient.lastError().message().c_str(), aClient.lastError().code());
+    }
+  } else {
+    Serial.println("Not ready!!!");
   }
 }
 

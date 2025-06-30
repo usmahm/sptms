@@ -26,6 +26,9 @@ extern SoftwareSerial ss;
 struct location {
    String lat;
    String lng;
+   String time;
+   int hdop;
+   int satellites;
 };
 
 extern location locationData;
