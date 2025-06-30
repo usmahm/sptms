@@ -1,27 +1,22 @@
-#include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 
-//static const int RXPin = 4, TXPin = 3;
 static const int RXPin = 14, TXPin = 12;
-static const uint32_t GPSBaud = 9600;
-
-// The TinyGPS++ object
-TinyGPSPlus gps;
 
 // The serial connection to the GPS device
-//SoftwareSerial ss(RXPin, TXPin);
-
-#include <SoftwareSerial.h>
+SoftwareSerial ss(RXPin, TXPin);
 
 // The serial connection to the GPS module
-SoftwareSerial ss(RXPin, TXPin);
+//SoftwareSerial ss(4, 3);
 
 void setup(){
   Serial.begin(9600);
   ss.begin(9600);
+
+  Serial.println(F("FullExample.ino"));
 }
 
 void loop(){
+  Serial.println(F("PPPPPPPP"));
   while (ss.available() > 0){
     // get the byte data from the GPS
     byte gpsData = ss.read();
