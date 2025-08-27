@@ -5,26 +5,27 @@ import { toast } from "react-toastify";
 import { PLOT_ROUTE_TYPE } from "@/components/PlotRoute/PlotRoute";
 import Button from "@/components/UI/Button/Button";
 import MapComponent, {
-  ACTION_TYPES,
+  ACTION_TYPES
 } from "@/components/MapComponent/MapComponent";
 import { MARKER_PROP_TYPE } from "@/components/CustomMarker/CustomMarker";
 import { BUS_TYPE, DESIRED_TRIP_TYPE, LAT_LNG_TYPE } from "@/types";
 // import { getTripById } from "@/api/firebaseQueries";
-import { createBusStop, createTrip } from "@/api/firebaseMutations";
+// import { createBusStop, createTrip } from "@/api/firebaseMutations";
 import { doc, onSnapshot } from "firebase/firestore";
 import { firebaseDb } from "@/utils/firebase";
 import { checkIfBoundContains, RECTANGLE_BOUND } from "@/utils/utils";
+import api from "@/api/api";
 
 const center = {
   lat: 7.501217,
-  lng: 4.502154,
+  lng: 4.502154
 };
 
 enum EDITING_ID {
   ORIGIN,
   DESTINATION,
   NEW_BUS_STOP,
-  GEOFENCE,
+  GEOFENCE
 }
 
 // type ROUTE_PLOT_DISPLAY_STATUS = {
@@ -94,15 +95,14 @@ function Home() {
         // [FIX]!: temporary hack
         setRoutedistDur({
           distance: res.routes[0].legs[0].distance.text,
-          duration: res.routes[0].legs[0].duration.text,
+          duration: res.routes[0].legs[0].duration.text
         });
       }
 
       setDesiredTrip({});
       setLoadingRoute(false);
     }
-  },
-  []);
+  }, []);
 
   // To handle selected points on the map
   const mapClickHandler = useCallback(
@@ -119,7 +119,7 @@ function Home() {
       ) {
         setDesiredTrip((curVal) => ({
           fro: editingId === EDITING_ID.ORIGIN ? latLng : curVal.fro,
-          to: editingId === EDITING_ID.DESTINATION ? latLng : curVal.to,
+          to: editingId === EDITING_ID.DESTINATION ? latLng : curVal.to
         }));
       } else if (editingId === EDITING_ID.NEW_BUS_STOP) {
         setNewBusStop(latLng);
@@ -142,7 +142,7 @@ function Home() {
       ) {
         setDesiredTrip((curVal) => ({
           fro: markerId === EDITING_ID.ORIGIN ? latLng : curVal.fro,
-          to: markerId === EDITING_ID.DESTINATION ? latLng : curVal.to,
+          to: markerId === EDITING_ID.DESTINATION ? latLng : curVal.to
         }));
       } else if (editingId === EDITING_ID.NEW_BUS_STOP && e.latLng) {
         setNewBusStop(latLng);
@@ -160,7 +160,7 @@ function Home() {
       const directionResult = await directionService.route({
         origin: desiredTrip.fro,
         destination: desiredTrip.to,
-        travelMode: google.maps.TravelMode.DRIVING,
+        travelMode: google.maps.TravelMode.DRIVING
       });
 
       console.log("HEYYY 333", directionResult);
@@ -202,10 +202,10 @@ function Home() {
         );
 
         const tripRoute = {
-          expected_path: routePath,
+          expected_path: routePath
         };
 
-        await createTrip(tripId, tripRoute);
+        // await createTrip(tripId, tripRoute);
 
         toast.success("New trip route submitted!");
       }
@@ -233,12 +233,14 @@ function Home() {
 
     try {
       if (newBusStop) {
-        const docData = {
+        const busStopData = {
           location: newBusStop,
-          name: makeid(5),
+          name: makeid(5)
         };
 
-        await createBusStop(docData);
+        // await createBusStop(busStopData);
+        const resp = await api.post("/bus-stops", busStopData);
+        console.log("HEYYY resp", resp);
 
         toast.success("New bus stop submitted!");
       }
@@ -310,27 +312,27 @@ function Home() {
       markers.push({
         label: "Origin",
         position: desiredTrip.fro,
-        onDragEnd: (e) => markerDragHandler(e, EDITING_ID.ORIGIN),
+        onDragEnd: (e) => markerDragHandler(e, EDITING_ID.ORIGIN)
       });
     }
     if (desiredTrip.to) {
       markers.push({
         label: "Destination",
         position: desiredTrip.to,
-        onDragEnd: (e) => markerDragHandler(e, EDITING_ID.DESTINATION),
+        onDragEnd: (e) => markerDragHandler(e, EDITING_ID.DESTINATION)
       });
     }
     if (newBusStop) {
       markers.push({
         label: "New Bus Stop",
         position: newBusStop,
-        onDragEnd: (e) => markerDragHandler(e, EDITING_ID.NEW_BUS_STOP),
+        onDragEnd: (e) => markerDragHandler(e, EDITING_ID.NEW_BUS_STOP)
       });
     }
     if (busData) {
       markers.push({
         label: busData.bus_reg_no,
-        position: busData.location,
+        position: busData.location
       });
     }
 
@@ -395,7 +397,7 @@ function Home() {
   const actionMode = getActionMode();
   return (
     <>
-      <div className="w-full h-screen bg-white flex flex-col py-4 px-10">
+      <div className="w-full h-full bg-white flex flex-col py-4 px-10">
         <div className="mb-3 flex flex-row items-center justify-between">
           <div>
             <div className="flex items-center justify-center gap-x-2 mb-2">

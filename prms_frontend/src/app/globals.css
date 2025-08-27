@@ -5,11 +5,43 @@
   --foreground: #171717;
 }
 
-@theme inline {
+/* @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+} */
+
+@theme {
+  --color-*: initial;
+}
+
+@theme {
+  /* Gray / Slate */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-slate-400: #9ca3af;
+  --color-slate-500: #6b7280;
+  --color-slate-600: #4b5563;
+  --color-slate-900: #111827;
+
+  /* Primary (Blue) */
+  --color-blue-50: #eff6ff;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+
+  /* Success (Green) */
+  --color-green-100: #dcfce7;
+  --color-green-700: #166534;
+
+  /* Danger (Red) */
+  --color-red-100: #fee2e2;
+  --color-red-500: #ef4444;
+  --color-red-800: #991b1b;
+
+  /* Base */
+  --color-white: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -20,7 +52,19 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  /* background: var(--background); */
+  /* color: var(--foreground); */
   font-family: Arial, Helvetica, sans-serif;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

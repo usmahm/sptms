@@ -7,6 +7,7 @@ export type MARKER_PROP_TYPE = {
   position: LAT_LNG_TYPE;
   draggable?: boolean;
   onDragEnd?: (e: google.maps.MapMouseEvent) => void;
+  onClick?: () => void;
 };
 
 const CustomMarker: React.FC<MARKER_PROP_TYPE> = ({
@@ -14,6 +15,7 @@ const CustomMarker: React.FC<MARKER_PROP_TYPE> = ({
   label,
   onDragEnd,
   draggable,
+  onClick
 }) => {
   // [FIX]! fix type from esp32
 
@@ -23,20 +25,21 @@ const CustomMarker: React.FC<MARKER_PROP_TYPE> = ({
       // @ts-expect-error: WIll fix type later on esp32 hardware code
       lat: parseFloat(position.lat),
       // @ts-expect-error: WIll fix type later on esp32 hardware code
-      lng: parseFloat(position.lng),
+      lng: parseFloat(position.lng)
     };
   }
 
-  console.log("HEYYY 443434", position, pos);
+  // console.log("HEYYY 443434", position, pos);
   return (
     <Marker
       position={pos}
       label={{
         text: label,
-        className: "absolute top-[15px] right-2/4 translate-x-2/4 font-bold",
+        className: "absolute top-[15px] right-2/4 translate-x-2/4 font-bold"
       }}
       draggable={draggable}
       onDragEnd={onDragEnd}
+      onClick={onClick}
     />
   );
 };
