@@ -9,6 +9,7 @@ type DropDownType = {
   label: string;
   value: string;
   placeholder: string;
+  disabled?: boolean;
   options: OptionType[];
   onClick: (option: OptionType) => void;
 };
@@ -18,16 +19,18 @@ const DropDown = ({
   value,
   options,
   onClick,
-  placeholder
+  placeholder,
+  disabled
 }: DropDownType) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   return (
-    <div className="relative flex-1 flex flex-col z-50">
+    <div className="relative flex-1 flex flex-col">
       <span className="font-semibold text-sm text-slate-900">{label}</span>
       <button
         className="bg-white border border-gray-200 rounded-lg mt-1 h-10 pl-3 text-sm text-left cursor-pointer"
         onClick={() => setIsOpen((prev) => !prev)}
+        disabled={disabled}
       >
         {value || placeholder}
       </button>

@@ -113,6 +113,8 @@ const MapComponent: React.FC<PropType> = ({
     return <div className="h-full w-full bg-white" />;
   }
 
+  console.log("HEYY 212", routesToPlot);
+
   return (
     <GoogleMap
       mapContainerStyle={containerStyle}

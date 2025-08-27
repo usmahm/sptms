@@ -1,7 +1,8 @@
+import LiveMonitorScreen from "@/components/TopLevelComponents/LiveMonitorScreen";
 import React from "react";
 
 const LiveMonitor = () => {
-  return <div>Admin Page</div>;
+  return <LiveMonitorScreen />;
 };
 
 export default LiveMonitor;

@@ -28,8 +28,8 @@ export type RouteType = {
   start_bus_stop: string;
   end_bus_stop: string;
   expected_path: {
-    lat: string;
-    lng: string;
+    lat: number;
+    lng: number;
   }[];
   duration: number;
   distance: number;

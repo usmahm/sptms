@@ -45,7 +45,7 @@ const RouteScreen = () => {
     undefined
   );
 
-  const loadBusStops = async () => {
+  const loadRoutes = async () => {
     try {
       const response: ApiResponse<RouteType[]> = await api.get("/routes");
       if (response.success) {
@@ -63,7 +63,7 @@ const RouteScreen = () => {
   };
 
   useEffect(() => {
-    loadBusStops();
+    loadRoutes();
   }, []);
 
   let toRender = <RouteList routes={routes} loading={loadingRoutes} />;
