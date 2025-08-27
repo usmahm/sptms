@@ -9,11 +9,13 @@ export const createBusStop = async (
   next: NextFunction
 ) => {
   try {
-    const { name, location } = req.body;
+    const { name, location, code, status } = req.body;
 
     const busData: BusStopType = {
-      name: name,
-      location: location
+      name,
+      location,
+      code,
+      status
     };
 
     const { data, error } = await busStopsService.createBusStop(busData);

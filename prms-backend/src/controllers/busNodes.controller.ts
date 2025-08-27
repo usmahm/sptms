@@ -9,11 +9,12 @@ export const createBusNode = async (
   next: NextFunction
 ) => {
   try {
-    const { bus_reg_no, location } = req.body;
+    const { name, status, code } = req.body;
 
     const busData: BusType = {
-      bus_reg_no: bus_reg_no,
-      location: location
+      name,
+      status,
+      code
     };
 
     const { data, error } = await busNodesService.createBusNode(busData);
@@ -48,6 +49,34 @@ export const getBusNodes = async (
     }
 
     responseService.success(res, "Bus Nodes Fetched Successfully!", data);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const editBusNode = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const node_id = req.params.node_id;
+
+    // [FIX]! Implement validation later
+    const routeData: any = req.body;
+
+    const { data, error } = await busNodesService.editBusNode(
+      node_id,
+      routeData
+    );
+    if (error) {
+      return responseService.internalServerError(
+        res,
+        "Unexpected Error happened"
+      );
+    }
+
+    responseService.created(res, "Bus Node Edited Successfully!", data);
   } catch (err) {
     next(err);
   }

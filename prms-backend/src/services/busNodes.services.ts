@@ -10,6 +10,16 @@ const createBusNode = async (busData: any) => {
   return { data, error };
 };
 
+const editBusNode = async (id: string, busData: Partial<BusType>) => {
+  const { data, error } = await supabase
+    .from("bus_nodes")
+    .update(busData)
+    // .select()
+    .eq("id", id);
+
+  return { data, error };
+};
+
 const getAllBusNodes = async () => {
   const { data, error } = await supabase.from("bus_nodes").select();
 
@@ -28,5 +38,6 @@ const getBusNodeById = async (id: string) => {
 export default {
   createBusNode,
   getAllBusNodes,
+  editBusNode,
   getBusNodeById
 };

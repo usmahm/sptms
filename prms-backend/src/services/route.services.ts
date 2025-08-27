@@ -10,7 +10,7 @@ const createRoute = async (routeData: RouteType) => {
   return { data, error };
 };
 
-const editRoute = async (id: string, routeData: RouteType) => {
+const editRoute = async (id: string, routeData: Partial<RouteType>) => {
   const { data, error } = await supabase
     .from("routes")
     .update(routeData)

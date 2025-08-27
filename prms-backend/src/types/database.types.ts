@@ -62,52 +62,97 @@ export type Database = {
       };
       bus_stops: {
         Row: {
+          code: string | null;
           created_at: string;
           id: string;
           location: Json | null;
           name: string | null;
+          status: string | null;
         };
         Insert: {
+          code?: string | null;
           created_at?: string;
           id?: string;
           location?: Json | null;
           name?: string | null;
+          status?: string | null;
         };
         Update: {
+          code?: string | null;
           created_at?: string;
           id?: string;
           location?: Json | null;
           name?: string | null;
+          status?: string | null;
+        };
+        Relationships: [];
+      };
+      geo_fences: {
+        Row: {
+          bound: Json | null;
+          created_at: string;
+          id: string;
+          name: string | null;
+          status: string | null;
+          type: string | null;
+        };
+        Insert: {
+          bound?: Json | null;
+          created_at?: string;
+          id?: string;
+          name?: string | null;
+          status?: string | null;
+          type?: string | null;
+        };
+        Update: {
+          bound?: Json | null;
+          created_at?: string;
+          id?: string;
+          name?: string | null;
+          status?: string | null;
+          type?: string | null;
         };
         Relationships: [];
       };
       routes: {
         Row: {
+          code: string | null;
           created_at: string;
           distance: number | null;
+          duration: number | null;
           end_bus_stop: string | null;
           expected_path: Json | null;
+          geo_fence: string | null;
           id: string;
           name: string | null;
           start_bus_stop: string | null;
+          status: string | null;
         };
         Insert: {
+          code?: string | null;
           created_at?: string;
           distance?: number | null;
+          duration?: number | null;
           end_bus_stop?: string | null;
           expected_path?: Json | null;
+          geo_fence?: string | null;
           id?: string;
           name?: string | null;
           start_bus_stop?: string | null;
+          status?: string | null;
         };
         Update: {
+          code?: string | null;
           created_at?: string;
           distance?: number | null;
+          duration?: number | null;
           end_bus_stop?: string | null;
           expected_path?: Json | null;
+          geo_fence?: string | null;
           id?: string;
           name?: string | null;
           start_bus_stop?: string | null;
+          status?: string | null;
         };
         Relationships: [
           {
@@ -115,6 +160,13 @@ export type Database = {
             columns: ["end_bus_stop"];
             isOneToOne: false;
             referencedRelation: "bus_stops";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "routes_geo_fence_fkey";
+            columns: ["geo_fence"];
+            isOneToOne: false;
+            referencedRelation: "geo_fences";
             referencedColumns: ["id"];
           },
           {

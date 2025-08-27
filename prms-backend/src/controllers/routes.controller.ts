@@ -9,15 +9,27 @@ export const createRoute = async (
   next: NextFunction
 ) => {
   try {
-    const { name, start_bus_stop, end_bus_stop, expected_path, distance } =
-      req.body;
+    const {
+      name,
+      start_bus_stop,
+      end_bus_stop,
+      expected_path,
+      distance,
+      code,
+      duration,
+      status
+    } = req.body;
 
     const routeData = {
       name,
       start_bus_stop,
       end_bus_stop,
       expected_path,
-      distance
+      distance,
+      duration,
+      code,
+      status,
+      geo_fence: undefined
     };
 
     const { data, error } = await routeService.createRoute(routeData);
