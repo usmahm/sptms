@@ -75,7 +75,7 @@ const CreateGeofence: React.FC<CreateGeoFenceType> = ({
         // console.log("geofenceData", response);
         if (response.success) {
           toast.success("Geofence Created Successfully!");
-          // onCreateGeofence(response.data[0]);
+          onCreateGeofence(response.data[0]);
         } else {
           throw new Error();
         }

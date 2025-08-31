@@ -23,6 +23,7 @@ export type TripType = {
   scheduled_arrival_time: string;
   actual_path: LAT_LNG_TYPE[];
   bus: string;
+  id: string;
 };
 
 export type BusStopType = {

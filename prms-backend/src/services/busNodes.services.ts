@@ -1,3 +1,4 @@
+import { type PostgrestError } from "@supabase/supabase-js";
 import { supabase } from "../config/db";
 import { BusType } from "../types/types";
 
@@ -10,14 +11,21 @@ const createBusNode = async (busData: any) => {
   return { data, error };
 };
 
-const editBusNode = async (id: string, busData: Partial<BusType>) => {
+const editBusNode = async (
+  id: string,
+  busData: Partial<BusType>,
+  propsToReturn?: string
+) => {
   const { data, error } = await supabase
     .from("bus_nodes")
     .update(busData)
-    // .select()
-    .eq("id", id);
+    .eq("id", id)
+    .select(propsToReturn);
 
-  return { data, error };
+  return { data, error } as {
+    data: Partial<BusType>[] | null;
+    error: PostgrestError | null;
+  };
 };
 
 const getAllBusNodes = async () => {

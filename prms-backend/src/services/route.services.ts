@@ -14,8 +14,8 @@ const editRoute = async (id: string, routeData: Partial<RouteType>) => {
   const { data, error } = await supabase
     .from("routes")
     .update(routeData)
-    // .select()
-    .eq("id", id);
+    .eq("id", id)
+    .select();
 
   return { data, error };
 };

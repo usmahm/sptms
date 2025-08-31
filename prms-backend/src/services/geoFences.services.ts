@@ -17,7 +17,8 @@ const editGeofence = async (
   const { data, error } = await supabase
     .from("geo_fences")
     .update(geofenceData)
-    .eq("id", id);
+    .eq("id", id)
+    .select();
 
   return { data, error };
 };

@@ -12,6 +12,7 @@ const statusOptions = [
 ];
 
 export type BusType = {
+  id: string;
   name: string;
   code: string;
   status: string;

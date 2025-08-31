@@ -30,6 +30,11 @@ const routes: {
     icon: <GeofencingIcon />
   },
   {
+    label: "Trips",
+    href: "/trips",
+    icon: <RoutesIcon />
+  },
+  {
     label: "Live Monitor",
     href: "/live-monitor",
     icon: <LiveMonitorIcon />

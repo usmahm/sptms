@@ -1,64 +1,35 @@
 #include <Arduino.h>
+
+#include <WiFi.h>
+
+#include "customWifi.h"
 #include "gps-module.h"
-#include "firebase-interface.h"
+#include "api.h"
 
 void setup()
 {
-  Serial.begin(9600);
+  //Initialize serial and wait for port to open:
+  Serial.begin(115200);
+  delay(100);
 
-  firebaseSetup();
+  initializeWifi();
   gpssetup();
 }
 
-// Timer variables for sending data every 10 seconds
-unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 1000; // 10 seconds in milliseconds
 
 void loop()
 {
   gpsloop();
 
-  unsigned long currentTime = millis();
-  if (currentTime - lastSendTime >= sendInterval){
-    lastSendTime = currentTime;
-    if (getLocation()) {
-      Serial.println(locationData.lat);
-      sendLocationData(locationData);
-    }
+  getLocation();
+  if (locationUpdated) {
+    sendLocationData(locationData);
+
+    locationUpdated = false;
   }
 
-  firebaseLoop();
+  delay(30000);
 }
 
 
-// #include <SoftwareSerial.h>
 
-// static const int RXPin = 14, TXPin = 12;
-
-// // The serial connection to the GPS device
-// SoftwareSerial sss(RXPin, TXPin);
-
-// // The serial connection to the GPS module
-// //SoftwareSerial sss(4, 3);
-
-// void setup(){
-//   Serial.begin(9600);
-//   sss.begin(9600);
-
-//   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-//   Serial.print("Connecting to Wi-Fi");
-//   while (WiFi.status() != WL_CONNECTED)    {
-//     Serial.print(".");
-//     delay(300);
-//   }
-//   // Serial.println(F("FullExample.ino"));
-// }
-
-// void loop(){
-//   // Serial.println(F("PPPPPPPP"));
-//   while (sss.available() > 0){
-//     // get the byte data from the GPS
-//     byte gpsData = sss.read();
-//     Serial.write(gpsData);
-//   }
-// }

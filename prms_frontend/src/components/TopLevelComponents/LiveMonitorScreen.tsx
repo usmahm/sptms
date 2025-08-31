@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Button from "../UI/Button/Button";
 import EditIcon from "@/svg-icons/edit.svg";
 import DeleteIcon from "@/svg-icons/delete.svg";
@@ -10,6 +10,8 @@ import BusCard from "../Cards/BusCard";
 import CreateBus, { BusType } from "../Forms/CreateBus";
 import api, { ApiResponse } from "@/api/api";
 import { toast } from "react-toastify";
+import { TripType } from "../Forms/CreateTrip.";
+import { LAT_LNG_TYPE } from "@/types";
 
 enum VIEW_TYPES {
   LIST,
@@ -50,7 +52,9 @@ const FleetDashboard = ({
             <LoadingSpinner />
           </div>
         ) : (
-          fleet.map((g) => <BusCard bus={g} onClick={() => onSelectBus(g)} />)
+          fleet.map((g) => (
+            <BusCard key={g.id} bus={g} onClick={() => onSelectBus(g)} />
+          ))
         )}
       </div>
 
@@ -95,6 +99,8 @@ const FleetDashboard = ({
 const LiveMonitorScreen = () => {
   const [view, setView] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
   const [fleet, setFleet] = useState<BusType[]>([]);
+  // const [tripData, setTripData] = useState<LAT_LNG_TYPE[]>([]);
+  // const tripEvent = useRef<EventSource | null>(null);
 
   const [loadingFleet, setLoadingFleet] = useState(true);
   const [editingBus, setEditingBus] = useState<BusType | undefined>(undefined);
@@ -107,14 +113,14 @@ const LiveMonitorScreen = () => {
     try {
       const response: ApiResponse<BusType[]> = await api.get("/bus-nodes");
 
-      console.log("fleet", response);
+      // console.log("fleet", response);
       if (response.success) {
         setFleet(response.data);
       } else {
         throw new Error();
       }
     } catch (err) {
-      toast.error("Unable to fetch routes!");
+      toast.error("Unable to load buses!");
     } finally {
       setLoadingFleet(false);
     }
@@ -122,14 +128,46 @@ const LiveMonitorScreen = () => {
 
   useEffect(() => {
     loadFleet();
+
+    // return () => {
+    //   if (tripEvent.current) {
+    //     tripEvent.current.close();
+    //     tripEvent.current = null;
+    //   }
+    // };
   }, []);
+
+  // const trackTrip = async (tripId: string) => {
+  //   try {
+  //     if (tripEvent.current) {
+  //       tripEvent.current.close();
+  //       tripEvent.current = null;
+  //     }
+
+  //     const events = new EventSource(
+  //       `${api.getUri()}/trips/path/events/${tripId}`
+  //     );
+  //     events.onmessage = (event) => {
+  //       // console.log("HEYYY resp", event);
+  //       const parsedData: LAT_LNG_TYPE[] = JSON.parse(event.data);
+
+  //       setTripData((prev) => [...prev, ...parsedData]);
+  //     };
+
+  //     tripEvent.current = events;
+  //   } catch {
+  //     toast.error("Unable to track trip, try again!");
+  //   }
+  // };
 
   let toRender = (
     <FleetDashboard
       fleet={fleet}
       loading={loadingFleet}
       selectedBus={selectedBus}
-      onSelectBus={(b) => setSelectedBus(b)}
+      onSelectBus={(b) => {
+        setSelectedBus(b);
+      }}
       openNewBusForm={() => setView(VIEW_TYPES.FORM)}
     />
   );
