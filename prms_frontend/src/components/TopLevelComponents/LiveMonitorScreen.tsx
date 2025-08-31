@@ -10,8 +10,7 @@ import BusCard from "../Cards/BusCard";
 import CreateBus, { BusType } from "../Forms/CreateBus";
 import api, { ApiResponse } from "@/api/api";
 import { toast } from "react-toastify";
-import { TripType } from "../Forms/CreateTrip.";
-import { LAT_LNG_TYPE } from "@/types";
+import { MARKER_PROP_TYPE } from "../CustomMarker/CustomMarker";
 
 enum VIEW_TYPES {
   LIST,
@@ -37,6 +36,16 @@ const FleetDashboard = ({
   selectedBus?: BusType;
   openNewBusForm: () => void;
 }) => {
+  let markers: MARKER_PROP_TYPE[] = [];
+  if (selectedBus && selectedBus.location) {
+    markers = [
+      {
+        label: selectedBus.name,
+        position: selectedBus.location
+      }
+    ];
+  }
+
   return (
     <div className="grid grid-cols-[329px_1fr] gap-x-6 ">
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -81,7 +90,7 @@ const FleetDashboard = ({
         </div>
         <div className="h-100 bg-blue-50">
           {selectedBus ? (
-            <MapComponent center={center} />
+            <MapComponent center={center} markers={markers} />
           ) : (
             <div className="h-full w-full flex flex-col justify-center items-center">
               <LiveMonitorIcon w-64 h-64 />
@@ -99,8 +108,6 @@ const FleetDashboard = ({
 const LiveMonitorScreen = () => {
   const [view, setView] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
   const [fleet, setFleet] = useState<BusType[]>([]);
-  // const [tripData, setTripData] = useState<LAT_LNG_TYPE[]>([]);
-  // const tripEvent = useRef<EventSource | null>(null);
 
   const [loadingFleet, setLoadingFleet] = useState(true);
   const [editingBus, setEditingBus] = useState<BusType | undefined>(undefined);
@@ -113,7 +120,7 @@ const LiveMonitorScreen = () => {
     try {
       const response: ApiResponse<BusType[]> = await api.get("/bus-nodes");
 
-      // console.log("fleet", response);
+      console.log("fleet", response);
       if (response.success) {
         setFleet(response.data);
       } else {
@@ -128,37 +135,7 @@ const LiveMonitorScreen = () => {
 
   useEffect(() => {
     loadFleet();
-
-    // return () => {
-    //   if (tripEvent.current) {
-    //     tripEvent.current.close();
-    //     tripEvent.current = null;
-    //   }
-    // };
   }, []);
-
-  // const trackTrip = async (tripId: string) => {
-  //   try {
-  //     if (tripEvent.current) {
-  //       tripEvent.current.close();
-  //       tripEvent.current = null;
-  //     }
-
-  //     const events = new EventSource(
-  //       `${api.getUri()}/trips/path/events/${tripId}`
-  //     );
-  //     events.onmessage = (event) => {
-  //       // console.log("HEYYY resp", event);
-  //       const parsedData: LAT_LNG_TYPE[] = JSON.parse(event.data);
-
-  //       setTripData((prev) => [...prev, ...parsedData]);
-  //     };
-
-  //     tripEvent.current = events;
-  //   } catch {
-  //     toast.error("Unable to track trip, try again!");
-  //   }
-  // };
 
   let toRender = (
     <FleetDashboard
@@ -196,13 +173,6 @@ const LiveMonitorScreen = () => {
             Track bus locations and status in real-time
           </p>
         </div>
-
-        {/* {view === VIEW_TYPES.LIST && (
-          <Button
-            label="+ Create Geofence"
-            onClick={() => setView(VIEW_TYPES.FORM)}
-          />
-        )} */}
       </div>
 
       {toRender}

@@ -3,6 +3,7 @@ import {
   DirectionsRenderer,
   DrawingManager,
   GoogleMap,
+  Libraries,
   useJsApiLoader
 } from "@react-google-maps/api";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -48,6 +49,7 @@ const MapComponent: React.FC<PropType> = ({
   const geofenceRectRef = useRef<google.maps.Rectangle | null>(null);
   const rectChangesEventListenerRef =
     useRef<google.maps.MapsEventListener | null>(null);
+  const [gLibraries] = useState<Libraries>(["drawing"]);
 
   // commented out something I am not sure of here
   const onLoad = useCallback(function callback(map: google.maps.Map) {
@@ -66,7 +68,7 @@ const MapComponent: React.FC<PropType> = ({
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
-    libraries: ["drawing"]
+    libraries: gLibraries
   });
 
   const handleGeofenceRectChange = () => {

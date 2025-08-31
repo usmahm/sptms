@@ -59,7 +59,7 @@ const SideNavBar = () => {
             className={`mt-2 flex px-3 py-2.5 items-center rounded-lg  ${pathname === route.href ? "bg-blue-50 border-r-3 border-blue-700" : ""}`}
           >
             {route.icon}
-            <p className="ml-3 text-base text-slate-600">{route.label}</p>
+            <span className="ml-3 text-base text-slate-600">{route.label}</span>
           </Link>
         ))}
       </div>
