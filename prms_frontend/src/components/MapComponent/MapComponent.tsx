@@ -1,8 +1,9 @@
+"use client";
 import {
   DirectionsRenderer,
   DrawingManager,
   GoogleMap,
-  useJsApiLoader,
+  useJsApiLoader
 } from "@react-google-maps/api";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import PlotRoute, { PLOT_ROUTE_TYPE } from "../PlotRoute/PlotRoute";
@@ -13,22 +14,23 @@ import { RECTANGLE_BOUND } from "@/utils/utils";
 const containerStyle = {
   width: "100%",
   height: "100%",
-  flex: 1,
+  flex: 1
 };
 
 export enum ACTION_TYPES {
   SELECT_POINT,
-  DRAWING_RECTANGLE,
+  DRAWING_RECTANGLE
 }
 
+// [FIX]! improve the typing here!!!!
 type PropType = {
   center: LAT_LNG_TYPE;
   actionMode?: ACTION_TYPES;
-  onSelectPoint: (e: google.maps.MapMouseEvent) => void;
-  onDrawRectangle: (rectangleBound: RECTANGLE_BOUND) => void;
+  onSelectPoint?: (e: google.maps.MapMouseEvent) => void;
+  onDrawRectangle?: (rectangleBound: RECTANGLE_BOUND) => void;
   directionResult?: google.maps.DirectionsResult; // [FIX]! change to plot route component
-  markers: MARKER_PROP_TYPE[];
-  routesToPlot: PLOT_ROUTE_TYPE[];
+  markers?: MARKER_PROP_TYPE[];
+  routesToPlot?: PLOT_ROUTE_TYPE[];
   isWithinGeoFence?: boolean;
 };
 
@@ -40,19 +42,20 @@ const MapComponent: React.FC<PropType> = ({
   directionResult,
   markers,
   routesToPlot,
-  isWithinGeoFence,
+  isWithinGeoFence
 }) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const geofenceRectRef = useRef<google.maps.Rectangle | null>(null);
   const rectChangesEventListenerRef =
     useRef<google.maps.MapsEventListener | null>(null);
 
+  // commented out something I am not sure of here
   const onLoad = useCallback(function callback(map: google.maps.Map) {
     // This is just an example of getting and using the map instance!!! don't just blindly copy!
     const bounds = new window.google.maps.LatLngBounds(center);
     map.fitBounds(bounds);
-
-    setMap(map);
+    // map.setOptions({ });
+    // setMap(map);
   }, []);
 
   const onUnmount = useCallback(function callback() {
@@ -63,17 +66,17 @@ const MapComponent: React.FC<PropType> = ({
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
-    libraries: ["drawing"],
+    libraries: ["drawing"]
   });
 
   const handleGeofenceRectChange = () => {
-    if (geofenceRectRef.current) {
+    if (onDrawRectangle && geofenceRectRef.current) {
       const res = geofenceRectRef.current.getBounds();
 
       if (res) {
         onDrawRectangle({
           southWest: res.getSouthWest().toJSON(),
-          northEast: res.getNorthEast().toJSON(),
+          northEast: res.getNorthEast().toJSON()
         });
       }
     }
@@ -82,6 +85,7 @@ const MapComponent: React.FC<PropType> = ({
   const onRectangleComplete = (rect: google.maps.Rectangle) => {
     geofenceRectRef.current = rect;
 
+    // remove previous listener
     if (rectChangesEventListenerRef.current) {
       rectChangesEventListenerRef.current.remove();
     }
@@ -94,65 +98,68 @@ const MapComponent: React.FC<PropType> = ({
     handleGeofenceRectChange();
   };
 
+  // [FIX]! This should be done outside this component wherever it is needed
   useEffect(() => {
     if (!geofenceRectRef.current) return;
     const color = isWithinGeoFence ? "#008000" : "#FF0000";
 
     geofenceRectRef.current.setOptions({
       strokeColor: color,
-      fillColor: color,
+      fillColor: color
     });
   }, [isWithinGeoFence, geofenceRectRef]);
 
+  if (typeof window === undefined || !isLoaded) {
+    return <div className="h-full w-full bg-white" />;
+  }
+
+  console.log("HEYY 212", routesToPlot);
+
   return (
-    <>
-      {isLoaded && (
-        <GoogleMap
-          mapContainerStyle={containerStyle}
-          center={center}
-          zoom={10}
-          onLoad={onLoad}
-          onUnmount={onUnmount}
-          onClick={onSelectPoint}
-        >
-          {directionResult && (
-            <DirectionsRenderer
-              options={{
-                directions: directionResult,
-              }}
-            />
-          )}
-
-          {markers.map((marker) => (
-            <CustomMarker key={JSON.stringify(marker.position)} {...marker} />
-          ))}
-
-          {routesToPlot.map((route) => (
-            <PlotRoute key={route.path.toString()} {...route} />
-          ))}
-
-          {/* {actionMode === ACTION_TYPES.DRAWING_RECTANGLE ? ( */}
-          <DrawingManager
-            drawingMode={
-              actionMode === ACTION_TYPES.DRAWING_RECTANGLE
-                ? google.maps.drawing.OverlayType.RECTANGLE
-                : null
-            }
-            onRectangleComplete={onRectangleComplete}
-            options={{
-              drawingControl: false,
-              rectangleOptions: {
-                editable: true,
-                draggable: true,
-                strokeColor: "#008000",
-                fillColor: "#008000",
-              },
-            }}
-          />
-          {/* ) : null} */}
-        </GoogleMap>
+    <GoogleMap
+      mapContainerStyle={containerStyle}
+      center={center}
+      zoom={10}
+      onLoad={onLoad}
+      onUnmount={onUnmount}
+      onClick={onSelectPoint}
+    >
+      {directionResult && (
+        <DirectionsRenderer
+          options={{
+            directions: directionResult
+          }}
+        />
       )}
-    </>
+
+      {markers &&
+        markers.map((marker) => (
+          <CustomMarker key={JSON.stringify(marker.position)} {...marker} />
+        ))}
+
+      {routesToPlot &&
+        routesToPlot.map((route) => (
+          <PlotRoute key={route.path.toString()} {...route} />
+        ))}
+
+      <DrawingManager
+        drawingMode={
+          actionMode === ACTION_TYPES.DRAWING_RECTANGLE
+            ? google.maps.drawing.OverlayType.RECTANGLE
+            : null
+        }
+        onRectangleComplete={onRectangleComplete}
+        options={{
+          drawingControl: false,
+          rectangleOptions: {
+            editable: true,
+            draggable: true,
+            strokeColor: "#008000",
+            fillColor: "#008000"
+          }
+        }}
+      />
+    </GoogleMap>
   );
 };
 

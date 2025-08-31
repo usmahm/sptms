@@ -16,7 +16,7 @@ export type TRIP = {
   end_bus_stop: string;
   scheduled_arrival_time: string;
   scheduled_departure_time: string;
-}
+};
 
 export type DESIRED_TRIP_TYPE = {
   to?: LAT_LNG_TYPE;
@@ -31,4 +31,4 @@ export type BUS_STOP_TYPE = {
 export type BUS_TYPE = {
   bus_reg_no: string;
   location: LAT_LNG_TYPE;
-}
+};

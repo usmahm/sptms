@@ -1,82 +1,47 @@
 #include "gps-module.h"
 
-static const int RXPin = 14, TXPin = 12;
+#define RXD2 16
+#define TXD2 17
 static const uint32_t GPSBaud = 9600;
 
-location locationData;
+location locationData = {"", "", ""};
+bool locationUpdated = false;
 
-SoftwareSerial ss(RXPin, TXPin);
+HardwareSerial gpsSerial(2);
 
-// The TinyGPSPlus object
 TinyGPSPlus gps;
 
 
 void gpssetup() {
-  ss.begin(GPSBaud);
+  gpsSerial.begin(GPSBaud, SERIAL_8N1, RXD2, TXD2);
 
-  Serial.println(F("FullExample.ino"));
+  Serial.println("Serial 2 started at 9600 baud rate");
 };
 
-bool getLocation()
+void getLocation()
 {
-  // if (gps.location.isValid()) {
-    locationData.lat = String(gps.location.lat(), 8);
-    locationData.lng = String(gps.location.lng(), 8);
-    String time = String(gps.date.year()) + "/" + String(gps.date.month()) + "/" + String(gps.date.day()) + "," + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second());
-    locationData.time = time;
-    locationData.satellites = gps.satellites.value();
-    locationData.hdop = gps.hdop.value() / 100.0;
-
-      Serial.print("LAT: ");
-      Serial.println(gps.location.lat(), 6);
-      Serial.print("LONG: "); 
-      Serial.println(gps.location.lng(), 6);
-      Serial.print("SPEED (km/h) = "); 
-      Serial.println(gps.speed.kmph()); 
-      Serial.print("ALT (min)= "); 
-      Serial.println(gps.altitude.meters());
-      Serial.print("HDOP = "); 
-      Serial.println(gps.hdop.value() / 100.0); 
-      Serial.print("Satellites = "); 
-      Serial.println(gps.satellites.value()); 
-      Serial.print("Time in UTC: ");
-      Serial.println(String(gps.date.year()) + "/" + String(gps.date.month()) + "/" + String(gps.date.day()) + "," + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second()));
-      Serial.println("");
-    return true;
-  // } else {
-  //         Serial.print("LAT: ");
-  //     Serial.println(gps.location.lat(), 6);
-  //     Serial.print("LONG: "); 
-  //     Serial.println(gps.location.lng(), 6);
-  //     Serial.println("No data");
-  //     Serial.print("HDOP = "); 
-  //     Serial.println(gps.hdop.value() / 100.0); 
-  //     Serial.print("Satellites = "); 
-  //     Serial.println(gps.satellites.value()); 
-  //     Serial.print("Time in UTC: ");
-  //     Serial.println(String(gps.date.year()) + "/" + String(gps.date.month()) + "/" + String(gps.date.day()) + "," + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second()));
-  //     Serial.println("");
-  //   return false;
-  // }
+  if (gps.location.isValid() && gps.date.isValid()) {
+    if (gps.location.isUpdated() && gps.date.isUpdated()) {
+      locationData.lat = String(gps.location.lat(), 8);
+      locationData.lng = String(gps.location.lng(), 8);
+      String time = String(gps.date.year()) + "/" + String(gps.date.month()) + "/" + String(gps.date.day()) + "," + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second());
+      locationData.time = time;
+  
+      locationUpdated = true;
+    } else {
+      Serial.print("LOCATION DATA NOT UPDATED");
+    }
+  } else {
+    Serial.print("INVALID LOCATION DATA");
+  }
 }
 
 
 void gpsloop()
 {
-  smartDelay(1000);
+  while (gpsSerial.available() > 0)
+    gps.encode(gpsSerial.read());
 
   if (millis() > 5000 && gps.charsProcessed() < 10)
     Serial.println(F("No GPS data received: check wiring"));
-}
-
-// This custom version of delay() ensures that the gps object
-// is being "fed".
-void smartDelay(unsigned long ms)
-{
-  unsigned long start = millis();
-  do 
-  {
-    while (ss.available())
-      gps.encode(ss.read());
-  } while (millis() - start < ms);
 }
