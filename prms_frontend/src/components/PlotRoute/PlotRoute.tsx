@@ -30,8 +30,8 @@ const PlotRoute: React.FC<PLOT_ROUTE_TYPE> = ({
     strokeWeight: 5
   };
 
-  console.log("RENDERING " + count, path);
-  count = count + 1;
+  // console.log("RENDERING " + count, path);
+  // count = count + 1;
 
   return (
     <>
@@ -45,11 +45,13 @@ const PlotRoute: React.FC<PLOT_ROUTE_TYPE> = ({
           draggable={false}
         />
       )}
-      <Polyline
-        path={visible ? path : []}
-        options={pathOptions}
-        visible={visible}
-      />
+      {visible && path.length && (
+        <Polyline
+          path={visible ? path : []}
+          options={pathOptions}
+          visible={visible}
+        />
+      )}
     </>
   );
 };

@@ -22,15 +22,32 @@ const statusOptions = [
   { label: "Active", value: "ACTIVE" }
 ];
 
+// type L
+
 export type RouteType = {
   name: string;
   code: string;
-  start_bus_stop: string;
-  end_bus_stop: string;
+  start_bus_stop: {
+    code: string;
+    name: string;
+    location: LAT_LNG_TYPE;
+  };
+  end_bus_stop: {
+    code: string;
+    name: string;
+    location: LAT_LNG_TYPE;
+  };
   expected_path: {
     lat: number;
     lng: number;
   }[];
+  geo_fence: {
+    id: string;
+    bound: {
+      northEast: LAT_LNG_TYPE;
+      southWest: LAT_LNG_TYPE;
+    };
+  };
   duration: number;
   distance: number;
   id: string;

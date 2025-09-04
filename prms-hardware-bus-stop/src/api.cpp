@@ -1,7 +1,7 @@
 #include "api.h"
 
 int dataLength = 0;
-String busStopData[MAX_BUSES];
+String busStopData[MAX_DATA_LENGTH];
 
 
 void apiSetup();
@@ -95,8 +95,12 @@ String httpPATCHRequest(String apiURL, String payload) {
   return response;
 };
 
-bool fetchBusNodes() {
-  String endpoint = String(API_URL) + "/bus-nodes";
+bool fetchFutureTrips() {
+  // Get all buses scheduled for future departure from this bus station today. 
+  // i.e buses that has trip but has not started
+  // /bus-stops/:id/trips?future=true
+
+  String endpoint = String(API_URL) + "/trips?isFuture=true&timezone=Africa/Lagos&startBusStop=" + String(BUS_STOP_ID);
 
   String response = httpGETRequest(endpoint);
   
@@ -108,19 +112,59 @@ bool fetchBusNodes() {
     deserializeJson(doc, response);
     // Serial.println(response);
   
-    JsonArray buses = doc["data"];
+    JsonArray trips = doc["data"];
 
-    for (int i = 0; ((i < buses.size()) && (i < MAX_BUSES)); i++) {
-      // [FIX]! hacks till fully done
-      JsonObject bus = buses[i];
+    for (int i = 0; ((i < trips.size()) && (i < MAX_DATA_LENGTH)); i++) {
+      JsonObject trip = trips[i];
 
-      String time = bus["created_at"];
-      String busStop = bus["id"];
-      String busId = bus["code"];
+      String time = trip["scheduled_departure_time"];
+      String busStop = trip["route"]["start_bus_stop"]["code"];
+      String busCode = trip["bus"]["code"];
 
       time = time.substring(11, 16);
 
-      busStopData[i] = formatLCDBusRow(time, busStop, busId);
+      busStopData[i] = formatLCDBusRow(time, busStop, busCode);
+      
+      dataLength++;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+// // Variant for arrival time
+bool fetchOngoingTrips() {
+  // Get all buses scheduled for future departure from this bus station today. 
+  // i.e buses that has trip but has not started
+  // /bus-stops/:id/trips?future=true
+
+  String endpoint = String(API_URL) + "/trips?onGoing=true&timezone=Africa/Lagos&getEstimatedArrival=true&startBusStop=" + String(BUS_STOP_ID);
+
+  String response = httpGETRequest(endpoint);
+  
+  // Serial.println("response", response.c_str());
+  
+  if (response != "{}") {
+    JsonDocument doc;
+    
+    deserializeJson(doc, response);
+    // Serial.println(response);
+  
+    JsonArray trips = doc["data"];
+
+    for (int i = 0; ((i < trips.size()) && (i < MAX_DATA_LENGTH)); i++) {
+      // [FIX]! hacks till fully done
+      JsonObject trip = trips[i];
+
+      String time = trip["estimated_arrival_time"];
+      String busStop = trip["route"]["start_bus_stop"]["code"];
+      String busCode = trip["bus"]["code"];
+
+      time = time.substring(11, 16);
+
+      busStopData[i] = formatLCDBusRow(time, busStop, busCode);
       
       dataLength++;
     }

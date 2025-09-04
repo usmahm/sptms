@@ -1,4 +1,8 @@
 import React from "react";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 type DateTimeInputProps = {
   id: string;
@@ -17,6 +21,11 @@ const DateTimeInput: React.FC<DateTimeInputProps> = ({
   onChange,
   value
 }) => {
+  const onChangehandler = (value: string) => {
+    const formattedDateTime = dayjs(value).local().format();
+    onChange(formattedDateTime);
+  };
+
   return (
     <div className="flex-1 flex flex-col">
       <label htmlFor={id} className="font-semibold text-sm text-slate-900">
@@ -26,10 +35,9 @@ const DateTimeInput: React.FC<DateTimeInputProps> = ({
         id={id}
         name={id}
         type="datetime-local"
-        // placeholder={placeholder}
         disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-        value={value}
+        onChange={(e) => onChangehandler(e.target.value)}
+        value={dayjs(value).format("YYYY-MM-DDTHH:mm")}
         className="bg-white border border-gray-200 rounded-lg mt-1 h-10 pl-3 text-sm"
       />
     </div>
@@ -37,3 +45,4 @@ const DateTimeInput: React.FC<DateTimeInputProps> = ({
 };
 
 export default DateTimeInput;
+// 2025-09-01T01:35

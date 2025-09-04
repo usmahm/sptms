@@ -2,6 +2,10 @@ import { PostgrestError } from "@supabase/supabase-js";
 import { supabase } from "../config/db";
 import { Database, Tables } from "../types/database.types";
 import { TripType } from "../types/types";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 type TripDType = Tables<"trips">;
 
@@ -15,7 +19,24 @@ const createTrip = async (tripData: any) => {
   const { data, error } = await supabase
     .from("trips")
     .insert(tripData)
-    .select();
+    .select(
+      `*,
+      bus(
+        code
+      ),
+      route!inner (
+        id,
+        name,
+        code,
+        distance,
+        start_bus_stop:bus_stops!start_bus_stop(
+          name, code, location
+        ),
+        end_bus_stop:bus_stops!end_bus_stop(
+          name, code, location
+        )
+      )`
+    );
 
   return { data, error };
 };
@@ -25,13 +46,71 @@ const editTrip = async (id: string, tripData: Partial<TripType>) => {
     .from("trips")
     .update(tripData)
     .eq("id", id)
-    .select();
+    .select(
+      `*,
+      bus(
+        code
+      ),
+      route!inner (
+        id,
+        name,
+        code,
+        distance,
+        start_bus_stop:bus_stops!start_bus_stop(
+          name, code, location
+        ),
+        end_bus_stop:bus_stops!end_bus_stop(
+          name, code, location
+        )
+      )`
+    );
 
   return { data, error };
 };
 
-const getAllTrips = async () => {
-  const { data, error } = await supabase.from("trips").select();
+const getAllTrips = async (filter: {
+  startBusStop?: string;
+  endBusStop?: string;
+  isFuture?: boolean;
+  onGoing?: boolean;
+}) => {
+  let query = supabase.from("trips").select(
+    `*,
+    bus(
+      code
+    ),
+    route!inner (
+      id,
+      name,
+      code,
+      distance,
+      start_bus_stop:bus_stops!start_bus_stop(
+        name, code, location
+      ),
+      end_bus_stop:bus_stops!end_bus_stop(
+        name, code, location
+      )
+    )`
+  );
+
+  if (filter.startBusStop) {
+    query = query.eq(`route.start_bus_stop`, filter.startBusStop);
+  }
+  if (filter.endBusStop) {
+    query = query.eq(`route.end_bus_stop`, filter.endBusStop);
+  }
+  if (filter.isFuture) {
+    query = query.is("actual_departure_time", null);
+  }
+  if (filter.onGoing) {
+    const currentDateTime = dayjs.utc().format();
+
+    query = query
+      .is("actual_arrival_time", null)
+      .lte("actual_departure_time", currentDateTime);
+  }
+
+  const { data, error } = await query;
 
   return { data, error };
 };

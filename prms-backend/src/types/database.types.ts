@@ -41,27 +41,6 @@ export type Database = {
     Tables: {
       bus_nodes: {
         Row: {
-          bus_reg_no: string | null;
-          created_at: string;
-          id: string;
-          location: Json | null;
-        };
-        Insert: {
-          bus_reg_no?: string | null;
-          created_at?: string;
-          id?: string;
-          location?: Json | null;
-        };
-        Update: {
-          bus_reg_no?: string | null;
-          created_at?: string;
-          id?: string;
-          location?: Json | null;
-        };
-        Relationships: [];
-      };
-      bus_stops: {
-        Row: {
           code: string | null;
           created_at: string;
           id: string;
@@ -86,6 +65,44 @@ export type Database = {
           status?: string | null;
         };
         Relationships: [];
+      };
+      bus_stops: {
+        Row: {
+          code: string | null;
+          created_at: string;
+          geo_fence: string | null;
+          id: string;
+          location: Json | null;
+          name: string | null;
+          status: string | null;
+        };
+        Insert: {
+          code?: string | null;
+          created_at?: string;
+          geo_fence?: string | null;
+          id?: string;
+          location?: Json | null;
+          name?: string | null;
+          status?: string | null;
+        };
+        Update: {
+          code?: string | null;
+          created_at?: string;
+          geo_fence?: string | null;
+          id?: string;
+          location?: Json | null;
+          name?: string | null;
+          status?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bus_stops_geo_fence_fkey";
+            columns: ["geo_fence"];
+            isOneToOne: false;
+            referencedRelation: "geo_fences";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       geo_fences: {
         Row: {

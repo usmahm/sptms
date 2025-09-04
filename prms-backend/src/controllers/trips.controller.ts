@@ -2,7 +2,15 @@ import { NextFunction, Request, response, Response } from "express";
 import tripsServices from "../services/trips.services";
 import responseService from "../utils/responseService";
 import { randomUUID } from "crypto";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import googleMapsClient from "../config/googleMaps";
+import { LAT_LNG_TYPE } from "../types/types";
+import config from "../config/config";
+import { TransitMode, TravelMode } from "@googlemaps/google-maps-services-js";
 // import { BusStopType } from "../types/busStops.types";
+
+dayjs.extend(timezone);
 
 export const createTrip = async (
   req: Request,
@@ -68,13 +76,37 @@ export const editTrip = async (
   }
 };
 
-export const getTrip = async (
-  req: Request,
+interface GetTripsQuery {
+  startBusStop?: string;
+  timezone?: string;
+  endBusStop?: string;
+  isFuture?: boolean;
+  onGoing?: boolean;
+  getEstimatedArrival?: boolean;
+}
+
+const toTz = (val: string | null, timezone: string) =>
+  val ? dayjs(val).tz(timezone).format() : val;
+
+export const getTrips = async (
+  req: Request<{}, {}, {}, GetTripsQuery>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { data, error } = await tripsServices.getAllTrips();
+    const startBusStop = req.query.startBusStop;
+    const endBusStop = req.query.endBusStop;
+    const isFuture = req.query.isFuture;
+    const onGoing = req.query.onGoing;
+    const timezone = req.query.timezone;
+    const getEstimatedArrival = req.query.getEstimatedArrival;
+
+    const { data, error } = await tripsServices.getAllTrips({
+      startBusStop,
+      endBusStop,
+      isFuture,
+      onGoing
+    });
 
     if (error) {
       return responseService.internalServerError(
@@ -83,7 +115,58 @@ export const getTrip = async (
       );
     }
 
-    responseService.success(res, "Trips Fetched Successfully!", data);
+    let parsedResponse = data;
+
+    console.log("HEYYY 111", parsedResponse);
+    if (timezone && data) {
+      // for esp nodes, fix timezone hardcoded
+      parsedResponse = data?.map((tr) => ({
+        ...tr,
+        scheduled_departure_time: toTz(tr.scheduled_departure_time, timezone),
+        scheduled_arrival_time: toTz(tr.scheduled_arrival_time, timezone)
+        // estimated_arrival_time:
+        // actual_arrival_time: toTz(tr.actual_arrival_time, timezone)
+      }));
+    }
+
+    // [FIX]! BAADDDD refactor later:
+    if (getEstimatedArrival && parsedResponse) {
+      const promises = parsedResponse.map((tr) =>
+        googleMapsClient.directions({
+          params: {
+            // @ts-ignore
+            origin: tr.actual_path[tr.actual_path.length - 1],
+            destination: tr.route.end_bus_stop.location as LAT_LNG_TYPE,
+            key: config.GOOGLE_MAPS_API_KEY,
+            transit_mode: [TransitMode.bus]
+          }
+        })
+      );
+
+      console.log("HEEYEYE", promises.length);
+      const res = await Promise.all(promises);
+      parsedResponse = parsedResponse.map((r, i) => {
+        const duration = res[i].data.routes[0].legs[0].duration.value;
+
+        console.log("HEYYY 32323", duration);
+
+        let estimated_arrival_time = dayjs().add(duration, "second").format();
+        if (timezone) {
+          estimated_arrival_time = dayjs(estimated_arrival_time)
+            .tz(timezone)
+            .format();
+        }
+
+        return {
+          ...r,
+          estimated_arrival_time
+        };
+      });
+
+      // console.log("HEYYYY 000", res);
+    }
+
+    responseService.success(res, "Trips Fetched Successfully!", parsedResponse);
   } catch (err) {
     next(err);
   }

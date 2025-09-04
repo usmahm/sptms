@@ -25,8 +25,19 @@ const getBusStopById = async (id: string) => {
   return { data, error };
 };
 
+const editBusStop = async (id: string, busData: Partial<BusStopType>) => {
+  const { data, error } = await supabase
+    .from("bus_stops")
+    .update(busData)
+    .eq("id", id)
+    .select();
+
+  return { data, error };
+};
+
 export default {
   createBusStop,
   getAllBusStops,
-  getBusStopById
+  getBusStopById,
+  editBusStop
 };

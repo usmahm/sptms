@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import { PLOT_ROUTE_TYPE } from "../PlotRoute/PlotRoute";
 import { LAT_LNG_TYPE } from "@/types";
 import DateTimeInput from "../UI/Input/DateTimeInput";
+import dayjs from "dayjs";
 
 const center = {
   lat: 7.501217,
@@ -18,11 +19,27 @@ const center = {
 
 export type TripType = {
   id: string;
-  route: string;
+  // route: string;
+  route: {
+    code: string;
+    id: string;
+    name: string;
+    distance: number;
+    end_bus_stop: {
+      code: string;
+      name: string;
+    };
+    start_bus_stop: {
+      code: string;
+      name: string;
+    };
+  };
   actual_arrival_time?: string;
   actual_departure_time?: string;
   actual_path: LAT_LNG_TYPE[];
-  bus: string;
+  bus: {
+    code: string;
+  };
   scheduled_arrival_time?: string;
   scheduled_departure_time?: string;
 };
@@ -52,14 +69,19 @@ const CreateTrip: React.FC<CreateGeoFenceType> = ({
     try {
       setSubmitting(true);
 
-      if (bus && departureTime && route) {
+      const selectedRoute = routes.find((r) => r.id === route?.value);
+
+      if (bus && departureTime && selectedRoute) {
         const tripData = {
           bus: bus.value,
-          route: route.value,
-          scheduled_departure_time: departureTime
+          route: selectedRoute.id,
+          scheduled_departure_time: departureTime,
+          scheduled_arrival_time: dayjs(departureTime)
+            .add(selectedRoute.duration, "second")
+            .format()
         };
 
-        console.log("HEYYY 1212", tripData);
+        // console.log("HEYYY 1212", tripData);
 
         const response: ApiResponse<TripType[]> = await api.post(
           "/trips",
@@ -84,8 +106,6 @@ const CreateTrip: React.FC<CreateGeoFenceType> = ({
   const loadBuses = async () => {
     try {
       const response: ApiResponse<BusType[]> = await api.get("/bus-nodes");
-
-      console.log("fleet", response);
       if (response.success) {
         setBuses(response.data);
       } else {
@@ -102,6 +122,8 @@ const CreateTrip: React.FC<CreateGeoFenceType> = ({
     try {
       const response: ApiResponse<RouteType[]> = await api.get("/routes");
       if (response.success) {
+        console.log("fleet", response);
+
         setRoutes(response.data);
       } else {
         throw new Error();

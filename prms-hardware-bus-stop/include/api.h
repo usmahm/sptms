@@ -5,10 +5,10 @@
 #include "lcd-interface.h"
 #include "env.h"
 
-const int MAX_BUSES = 15;
+const int MAX_DATA_LENGTH = 15;
 
 extern int dataLength;
-extern String busStopData[MAX_BUSES];
+extern String busStopData[MAX_DATA_LENGTH];
 
 void apiSetup();
 
@@ -18,4 +18,6 @@ String httpPOSTRequest(String apiURL, String payload);
 
 String httpPATCHRequest(String apiURL, String payload);
 
-bool fetchBusNodes();
+bool fetchOngoingTrips();
+
+bool fetchFutureTrips();

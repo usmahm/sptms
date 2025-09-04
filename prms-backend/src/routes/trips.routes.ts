@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   createTrip,
-  getTrip,
+  getTrips,
   getTripById,
   editTrip,
   tripsPathEventHandler
@@ -10,7 +10,7 @@ import {
 const tripsRouter = Router();
 
 tripsRouter.post("/", createTrip);
-tripsRouter.get("/", getTrip);
+tripsRouter.get("/", getTrips);
 tripsRouter.get("/path/events/:trip_id", tripsPathEventHandler);
 tripsRouter.get("/:trip_id", getTripById);
 tripsRouter.patch("/:trip_id", editTrip);

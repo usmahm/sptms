@@ -28,8 +28,12 @@ void setup(){
 // };
 
 void loop(){
-  fetchBusNodes();
+  // fetchBusNodes();
+  // fetchFutureTrips();
+  fetchOngoingTrips();
 
   displayBusStopData(busStopData, dataLength);
   delay(5000);
+  // delay(60000);
+
 }

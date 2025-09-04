@@ -22,6 +22,7 @@ const DropDown = ({
   placeholder,
   disabled
 }: DropDownType) => {
+  console.log("HEYYY 111", options);
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   return (

@@ -9,6 +9,7 @@ import {
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import PlotRoute, { PLOT_ROUTE_TYPE } from "../PlotRoute/PlotRoute";
 import { LAT_LNG_TYPE } from "@/types";
+import { Rectangle } from "@react-google-maps/api";
 import CustomMarker, { MARKER_PROP_TYPE } from "../CustomMarker/CustomMarker";
 import { RECTANGLE_BOUND } from "@/utils/utils";
 
@@ -33,6 +34,7 @@ type PropType = {
   markers?: MARKER_PROP_TYPE[];
   routesToPlot?: PLOT_ROUTE_TYPE[];
   isWithinGeoFence?: boolean;
+  geofenceBounds?: google.maps.LatLngBounds;
 };
 
 const MapComponent: React.FC<PropType> = ({
@@ -43,7 +45,8 @@ const MapComponent: React.FC<PropType> = ({
   directionResult,
   markers,
   routesToPlot,
-  isWithinGeoFence
+  isWithinGeoFence,
+  geofenceBounds
 }) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const geofenceRectRef = useRef<google.maps.Rectangle | null>(null);
@@ -100,6 +103,8 @@ const MapComponent: React.FC<PropType> = ({
     handleGeofenceRectChange();
   };
 
+  const heyy: google.maps.RectangleOptions = {};
+
   // [FIX]! This should be done outside this component wherever it is needed
   useEffect(() => {
     if (!geofenceRectRef.current) return;
@@ -114,8 +119,6 @@ const MapComponent: React.FC<PropType> = ({
   if (typeof window === undefined || !isLoaded) {
     return <div className="h-full w-full bg-white" />;
   }
-
-  console.log("HEYY 212", routesToPlot);
 
   return (
     <GoogleMap
@@ -143,6 +146,18 @@ const MapComponent: React.FC<PropType> = ({
         routesToPlot.map((route) => (
           <PlotRoute key={route.path.toString()} {...route} />
         ))}
+
+      {geofenceBounds && (
+        <Rectangle
+          bounds={geofenceBounds}
+          options={{
+            // editable: true,
+            // draggable: true,
+            strokeColor: isWithinGeoFence ? "#008000" : "#FF0000",
+            fillColor: isWithinGeoFence ? "#008000" : "#FF0000"
+          }}
+        />
+      )}
 
       <DrawingManager
         drawingMode={

@@ -102,7 +102,7 @@ export const getRouteById = async (
 
     const { data, error } = await routeService.getRouteById(route_id);
 
-    if (!data?.length) {
+    if (!data) {
       return responseService.notFoundError(res, "Route doesn't exist");
     }
 

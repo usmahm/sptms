@@ -8,6 +8,7 @@ interface Config {
   SUPABASE_URL: string;
   SUPABASE_KEY: string;
   FRONTEND_ORIGIN: string;
+  GOOGLE_MAPS_API_KEY: string;
 }
 
 const config: Config = {
@@ -15,7 +16,8 @@ const config: Config = {
   NODE_ENV: process.env.NODE_ENV || "development",
   SUPABASE_KEY: process.env.SUPABASE_KEY!,
   SUPABASE_URL: process.env.SUPABASE_URL!,
-  FRONTEND_ORIGIN: process.env.FRONTEND_ORIGIN!
+  FRONTEND_ORIGIN: process.env.FRONTEND_ORIGIN!,
+  GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY!
 };
 
 export default config;
