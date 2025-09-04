@@ -49,7 +49,7 @@ const RouteScreen = () => {
     try {
       const response: ApiResponse<RouteType[]> = await api.get("/routes");
       if (response.success) {
-        // console.log("routes", response);
+        console.log("routes", response);
 
         setRoutes(response.data);
       } else {

@@ -77,7 +77,11 @@ const GeoFencingList = ({
           </div>
         ) : (
           geoFences.map((g) => (
-            <GeofenceCard geoFence={g} onClick={() => onSelectGeofence(g)} />
+            <GeofenceCard
+              key={g.id}
+              geoFence={g}
+              onClick={() => onSelectGeofence(g)}
+            />
           ))
         )}
       </div>

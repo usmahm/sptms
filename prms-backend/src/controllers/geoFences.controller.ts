@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import geoFencesServices from "../services/geoFences.services";
 import responseService from "../utils/responseService";
 import routeServices from "../services/route.services";
+import busStopsServices from "../services/busStops.services";
 
 export const createGeofence = async (
   req: Request,
@@ -9,7 +10,7 @@ export const createGeofence = async (
   next: NextFunction
 ) => {
   try {
-    const { bound, name, route, status, type } = req.body;
+    const { bound, name, geofenced_id, status, type } = req.body;
 
     const geofenceData = {
       bound,
@@ -29,11 +30,21 @@ export const createGeofence = async (
     }
 
     if (data) {
-      console.log("HEYYY xdfbdbv");
-      const { data: res, error: err } = await routeServices.editRoute(route, {
-        geo_fence: data[0].id
-      });
-      console.log("HEYYY sdsd", res, err);
+      if (type === "ROUTE_PROTECTION") {
+        const { data: res, error: err } = await routeServices.editRoute(
+          geofenced_id,
+          {
+            geo_fence: data[0].id
+          }
+        );
+      } else {
+        const { data: res, error: err } = await busStopsServices.editBusStop(
+          geofenced_id,
+          {
+            geo_fence: data[0].id
+          }
+        );
+      }
     }
 
     responseService.created(res, "Geofence Created Successfully!", data);

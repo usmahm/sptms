@@ -1,3 +1,4 @@
+import { RouteType } from "@/components/Forms/CreateRoute";
 import { LAT_LNG_TYPE } from "@/types";
 
 export type RECTANGLE_BOUND = {
@@ -32,4 +33,19 @@ export const mTokm = (num: number) => {
 
 export const secToMin = (num: number) => {
   return (num / 60).toFixed();
+};
+
+export const toLatLngBounds = (
+  geoFenceBound: RouteType["geo_fence"]["bound"]
+): google.maps.LatLngBounds => {
+  const sw = new google.maps.LatLng(
+    geoFenceBound.southWest.lat,
+    geoFenceBound.southWest.lng
+  );
+  const ne = new google.maps.LatLng(
+    geoFenceBound.northEast.lat,
+    geoFenceBound.northEast.lng
+  );
+
+  return new google.maps.LatLngBounds(sw, ne);
 };

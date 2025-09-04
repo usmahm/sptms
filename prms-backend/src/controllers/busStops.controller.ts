@@ -59,9 +59,9 @@ export const getBusStopById = async (
   next: NextFunction
 ) => {
   try {
-    const node_id = req.params.node_id;
+    const stop_id = req.params.stop_id;
 
-    const { data, error } = await busStopsService.getBusStopById(node_id);
+    const { data, error } = await busStopsService.getBusStopById(stop_id);
 
     if (!data?.length) {
       return responseService.notFoundError(res, "Bus Stop doesn't exist");

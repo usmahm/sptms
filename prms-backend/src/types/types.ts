@@ -31,6 +31,7 @@ export type BusStopType = {
   code: string;
   status: string;
   location: LAT_LNG_TYPE;
+  geo_fence?: string;
 };
 
 export type BusType = {
