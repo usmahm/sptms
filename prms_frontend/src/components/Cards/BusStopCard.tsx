@@ -2,7 +2,7 @@ import LocationIcon from "@/svg-icons/location.svg";
 import LocationIcon2 from "@/svg-icons/location-2.svg";
 import EditIcon from "@/svg-icons/edit.svg";
 import DeleteIcon from "@/svg-icons/delete.svg";
-import { BusStopType } from "../Forms/CreateBusStop";
+import { BusStopType } from "@/store/useBusStopsStore";
 
 type CardProps = {
   busStop: BusStopType;

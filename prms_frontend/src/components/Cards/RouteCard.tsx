@@ -3,8 +3,8 @@ import RouteIcon from "@/svg-icons/routes-icon.svg";
 import ClockIcon from "@/svg-icons/clock.svg";
 import EditIcon from "@/svg-icons/edit.svg";
 import DeleteIcon from "@/svg-icons/delete.svg";
-import { RouteType } from "../Forms/CreateRoute";
 import { mTokm, secToMin } from "@/utils/utils";
+import { RouteType } from "@/store/useRoutesStore";
 
 type CardProps = {
   route: RouteType;

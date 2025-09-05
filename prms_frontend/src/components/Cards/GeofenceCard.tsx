@@ -3,7 +3,8 @@ import RouteIcon from "@/svg-icons/routes-icon.svg";
 import ClockIcon from "@/svg-icons/clock.svg";
 import EditIcon from "@/svg-icons/edit.svg";
 import DeleteIcon from "@/svg-icons/delete.svg";
-import { GEOFENCE_TYPES, GeofenceType } from "../Forms/CreateGeofence";
+import { GEOFENCE_TYPES } from "../Forms/CreateGeofence";
+import { GeofenceType } from "@/store/useGeofenceStore";
 
 type CardProps = {
   geoFence: GeofenceType;
@@ -11,6 +12,7 @@ type CardProps = {
 };
 
 const GeofenceCard: React.FC<CardProps> = ({ geoFence, onClick }) => {
+  console.log("HEYYEYEYsdsd", geoFence);
   return (
     <button
       className="flex justify-between bg-white border-b border-gray-200 p-4 w-full cursor-pointer"
@@ -22,10 +24,10 @@ const GeofenceCard: React.FC<CardProps> = ({ geoFence, onClick }) => {
             {geoFence.name}
           </p>
         </div>
-        <div className="mt-2 flex items-center">
+        {/* <div className="mt-2 flex items-center">
           <RouteIcon />
           <p className="ml-1.5 text-sm text-slate-600">{geoFence.route}</p>
-        </div>
+        </div> */}
         <div className="flex items-center mt-2">
           {/* <ClockIcon /> */}
           <span
