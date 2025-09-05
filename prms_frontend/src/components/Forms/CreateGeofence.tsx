@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import DropDown, { OptionType } from "../UI/DropDown/DropDown";
 import Input from "../UI/Input/Input";
 import Button from "../UI/Button/Button";
-import api, { ApiResponse } from "@/api/api";
-import { RouteType } from "./CreateRoute";
-import { toast } from "react-toastify";
 import MapComponent, { ACTION_TYPES } from "../MapComponent/MapComponent";
 import { PLOT_ROUTE_TYPE } from "../PlotRoute/PlotRoute";
 import { RECTANGLE_BOUND } from "@/utils/utils";
-import { BusStopType } from "./CreateBusStop";
 import { MARKER_PROP_TYPE } from "../CustomMarker/CustomMarker";
+import useGeofenceStore, { GeofenceType } from "@/store/useGeofenceStore";
+import { useShallow } from "zustand/shallow";
+import useRoutesStore from "@/store/useRoutesStore";
+import useBusStopsStore from "@/store/useBusStopsStore";
 
 // Make this user location
 const center = {
@@ -27,29 +27,37 @@ const statusOptions = [
   { label: "Active", value: "ACTIVE" }
 ];
 
-export type GeofenceType = {
-  name: string;
-  status: string;
-  type: string;
-  route: string;
-  id: string;
-};
-
 type CreateGeoFenceType = {
   onCancel: () => void;
   geoFenceData?: GeofenceType;
-  onCreateGeofence: (geoFence: GeofenceType) => void;
+  onCreateGeofence: () => void;
 };
 
 const CreateGeofence: React.FC<CreateGeoFenceType> = ({
   onCreateGeofence,
   onCancel
 }) => {
-  const [loadingRoutes, setLoadingRoutes] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [loadingBusStops, setLoadingBusStops] = useState(true);
+  const { createGeofence, creatingGeofence } = useGeofenceStore(
+    useShallow((state) => ({
+      creatingGeofence: state.creatingGeofence,
+      createGeofence: state.createGeofence
+    }))
+  );
+  const { busStops, loadBusStops, loadingBusStops } = useBusStopsStore(
+    useShallow((state) => ({
+      busStops: state.busStops,
+      loadBusStops: state.loadBusStops,
+      loadingBusStops: state.loadingBusStops
+    }))
+  );
+  const { routes, loadRoutes, loadingRoutes } = useRoutesStore(
+    useShallow((state) => ({
+      routes: state.routes,
+      loadRoutes: state.loadRoutes,
+      loadingRoutes: state.loadingRoutes
+    }))
+  );
 
-  const [busStops, setBusStops] = useState<BusStopType[] | null>(null);
   const [geofenceBound, setGeofenceBound] = useState<RECTANGLE_BOUND | null>(
     null
   );
@@ -57,87 +65,33 @@ const CreateGeofence: React.FC<CreateGeoFenceType> = ({
   const [status, setStatus] = useState<OptionType | null>(null);
   const [geofenceType, setGeofenceType] = useState<OptionType | null>(null);
   const [geofencedProp, setGeofencedProp] = useState<OptionType | null>(null);
-  const [routes, setRoutes] = useState<RouteType[] | null>(null);
 
   const onSubmitHandler = async () => {
-    try {
-      setSubmitting(true);
+    if (name && geofencedProp && geofenceType && status && geofenceBound) {
+      const geofenceData = {
+        name,
+        status: status.value,
+        type: geofenceType.value,
+        geofenced_id: geofencedProp.value,
+        bound: geofenceBound
+      };
 
-      if (name && geofencedProp && geofenceType && status && geofenceBound) {
-        const geofenceData = {
-          name,
-          status: status.value,
-          type: geofenceType.value,
-          geofenced_id: geofencedProp.value,
-          bound: geofenceBound
-        };
-
-        // console.log("HEYyyy 121", geofenceData);
-        const response: ApiResponse<GeofenceType[]> = await api.post(
-          "/geo-fences",
-          geofenceData
-        );
-
-        // console.log("geofenceData", response);
-        if (response.success) {
-          toast.success("Geofence Created Successfully!");
-          onCreateGeofence(response.data[0]);
-        } else {
-          throw new Error();
-        }
-      }
-    } catch (err) {
-      console.log("HEYYY sds", err);
-      toast.error("Unable to create Geofence!");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const loadRoutes = async () => {
-    try {
-      const response: ApiResponse<RouteType[]> = await api.get("/routes");
-      if (response.success) {
-        // console.log("routes", response);
-
-        setRoutes(response.data);
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      toast.error("Unable to fetch routes, please reload!");
-    } finally {
-      setLoadingRoutes(false);
-    }
-  };
-
-  const loadBusStops = async () => {
-    try {
-      const response: ApiResponse<BusStopType[]> = await api.get("/bus-stops");
-      if (response.success) {
-        console.log("busStopData", response);
-
-        setBusStops(response.data);
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      toast.error("Unable to fetch bus stops!");
-    } finally {
-      setLoadingBusStops(false);
+      createGeofence(geofenceData, onCreateGeofence);
     }
   };
 
   const onSelectGeofenceType = (type: OptionType) => {
     setGeofenceType(type);
-    setBusStops(null);
-    setRoutes(null);
     setGeofencedProp(null);
 
     if (type.value === GEOFENCE_TYPES["ROUTE_PROTECTION"].value) {
-      loadRoutes();
+      if (!routes.length!) {
+        loadRoutes();
+      }
     } else {
-      loadBusStops();
+      if (!busStops.length) {
+        loadBusStops();
+      }
     }
   };
 
@@ -165,15 +119,14 @@ const CreateGeofence: React.FC<CreateGeoFenceType> = ({
   if (busStops && geofencedProp) {
     const stopData = busStops.find((r) => r.id == geofencedProp.value);
 
-    if (stopData)
-      [
-        (markers = [
-          {
-            label: stopData.name,
-            position: stopData.location
-          }
-        ])
+    if (stopData) {
+      markers = [
+        {
+          label: stopData.name,
+          position: stopData.location
+        }
       ];
+    }
   }
 
   let done = false;
@@ -196,7 +149,6 @@ const CreateGeofence: React.FC<CreateGeoFenceType> = ({
             value={geofenceType ? geofenceType.label : ""}
             placeholder="Select Geofence Type"
             options={Object.values(GEOFENCE_TYPES)}
-            // onClick={(v) => setGeofenceType(v)}
             onClick={onSelectGeofenceType}
           />
         </div>
@@ -265,7 +217,7 @@ const CreateGeofence: React.FC<CreateGeoFenceType> = ({
           label="Create Geofence"
           onClick={onSubmitHandler}
           disabled={!done}
-          loading={submitting}
+          loading={creatingGeofence}
         />
         <Button label="Cancel" onClick={onCancel} />
       </div>

@@ -3,10 +3,8 @@ import RouteIcon from "@/svg-icons/routes-icon.svg";
 import ClockIcon from "@/svg-icons/clock.svg";
 import EditIcon from "@/svg-icons/edit.svg";
 import DeleteIcon from "@/svg-icons/delete.svg";
-import { RouteType } from "../Forms/CreateRoute";
-import { mTokm, secToMin } from "@/utils/utils";
+import { mTokm } from "@/utils/utils";
 import { TripType } from "../Forms/CreateTrip.";
-import Button from "../UI/Button/Button";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 
@@ -35,9 +33,11 @@ const TripCard: React.FC<CardProps> = ({
   const dateTimeString = `${dayjs(trip.scheduled_departure_time).local().format("YYYY-MM-DD")} - ${dayjs(trip.scheduled_departure_time).local().format("HH:mm")} to ${dayjs(trip.scheduled_arrival_time).local().format("HH:mm")}`;
 
   return (
-    <button
+    <div
       className={`flex justify-betwee border-b border-gray-200 p-4 w-full cursor-pointer ${selected ? "bg-blue-50" : "bg-white"}`}
       onClick={onClick}
+      role="button"
+      tabIndex={0}
     >
       <div className="flex flex-col items-start">
         <div className="flex items-center">
@@ -66,7 +66,6 @@ const TripCard: React.FC<CardProps> = ({
       </div>
       <div className="flex flex-col">
         {!trip.actual_departure_time && (
-          // <Button label="Begin" onClick={onStartTrip} />
           <button
             className="text-xs text-slate-900 font-semibold underline"
             onClick={onStartTrip}
@@ -74,7 +73,6 @@ const TripCard: React.FC<CardProps> = ({
             Begin
           </button>
         )}
-        {/* <div className="flex justify-between"> */}
         <button
           className="flex justify-center items-center w-8 h-8"
           onClick={() => {}}
@@ -87,9 +85,8 @@ const TripCard: React.FC<CardProps> = ({
         >
           <DeleteIcon />
         </button>
-        {/* </div> */}
       </div>
-    </button>
+    </div>
   );
 };
 

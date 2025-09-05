@@ -1,4 +1,5 @@
-import { RouteType } from "@/components/Forms/CreateRoute";
+import { GeofenceType } from "@/store/useGeofenceStore";
+import { RouteType } from "@/store/useRoutesStore";
 import { LAT_LNG_TYPE } from "@/types";
 
 export type RECTANGLE_BOUND = {
@@ -36,7 +37,7 @@ export const secToMin = (num: number) => {
 };
 
 export const toLatLngBounds = (
-  geoFenceBound: RouteType["geo_fence"]["bound"]
+  geoFenceBound: GeofenceType["bound"]
 ): google.maps.LatLngBounds => {
   const sw = new google.maps.LatLng(
     geoFenceBound.southWest.lat,

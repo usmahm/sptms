@@ -2,15 +2,14 @@ import { useEffect, useState } from "react";
 import MapComponent from "../MapComponent/MapComponent";
 import Button from "../UI/Button/Button";
 import DropDown, { OptionType } from "../UI/DropDown/DropDown";
-import Input from "../UI/Input/Input";
-import { BusType } from "./CreateBus";
-import { RouteType } from "./CreateRoute";
-import api, { ApiResponse } from "@/api/api";
-import { toast } from "react-toastify";
 import { PLOT_ROUTE_TYPE } from "../PlotRoute/PlotRoute";
 import { LAT_LNG_TYPE } from "@/types";
 import DateTimeInput from "../UI/Input/DateTimeInput";
 import dayjs from "dayjs";
+import { useShallow } from "zustand/shallow";
+import useTripsStore from "@/store/useTripsStore";
+import useRoutesStore from "@/store/useRoutesStore";
+import useBusesStore from "@/store/useBusesStore";
 
 const center = {
   lat: 7.501217,
@@ -47,97 +46,67 @@ export type TripType = {
 type CreateGeoFenceType = {
   onCancel: () => void;
   tripData?: TripType;
-  onCreateTrip: (newTrip: TripType) => void;
+  onCreateTrip: () => void;
 };
 
 const CreateTrip: React.FC<CreateGeoFenceType> = ({
   onCancel,
   onCreateTrip
 }) => {
-  const [loadingRoutes, setLoadingRoutes] = useState(true);
-  const [loadingBuses, setLoadingBuses] = useState(true);
-  const [buses, setBuses] = useState<BusType[]>([]);
+  const { createTripHandler } = useTripsStore(
+    useShallow((state) => ({
+      createTripHandler: state.createTripHandler
+    }))
+  );
+
+  const { loadRoutes, routes, loadingRoutes } = useRoutesStore(
+    useShallow((state) => ({
+      loadRoutes: state.loadRoutes,
+      loadingRoutes: state.loadingRoutes,
+      routes: state.routes
+    }))
+  );
+
+  const { buses, loadingBuses, loadBuses } = useBusesStore(
+    useShallow((state) => ({
+      buses: state.buses,
+      loadingBuses: state.loadingBuses,
+      loadBuses: state.loadBuses
+    }))
+  );
+
   const [bus, setBus] = useState<OptionType | null>(null);
   const [route, setRoute] = useState<OptionType | null>(null);
-  const [routes, setRoutes] = useState<RouteType[]>([]);
   const [departureTime, setDepartureTime] = useState(
     "2025-05-21T06:31:39.274Z"
   );
   const [submitting, setSubmitting] = useState(false);
 
   const onSubmitHandler = async () => {
-    try {
-      setSubmitting(true);
+    const selectedRoute = routes.find((r) => r.id === route?.value);
 
-      const selectedRoute = routes.find((r) => r.id === route?.value);
+    if (bus && departureTime && selectedRoute) {
+      const tripData = {
+        bus: bus.value,
+        route: selectedRoute.id,
+        scheduled_departure_time: departureTime,
+        scheduled_arrival_time: dayjs(departureTime)
+          .add(selectedRoute.duration, "second")
+          .format()
+      };
 
-      if (bus && departureTime && selectedRoute) {
-        const tripData = {
-          bus: bus.value,
-          route: selectedRoute.id,
-          scheduled_departure_time: departureTime,
-          scheduled_arrival_time: dayjs(departureTime)
-            .add(selectedRoute.duration, "second")
-            .format()
-        };
-
-        // console.log("HEYYY 1212", tripData);
-
-        const response: ApiResponse<TripType[]> = await api.post(
-          "/trips",
-          tripData
-        );
-
-        // console.log("routeData", response);
-        if (response.success) {
-          toast.success("Trip Created Successfully!");
-          onCreateTrip(response.data[0]);
-        } else {
-          throw new Error();
-        }
-      }
-    } catch {
-      toast.error("Unable to create Trip!");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const loadBuses = async () => {
-    try {
-      const response: ApiResponse<BusType[]> = await api.get("/bus-nodes");
-      if (response.success) {
-        setBuses(response.data);
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      toast.error("Unable to load buses!");
-    } finally {
-      setLoadingBuses(false);
-    }
-  };
-
-  const loadRoutes = async () => {
-    try {
-      const response: ApiResponse<RouteType[]> = await api.get("/routes");
-      if (response.success) {
-        console.log("fleet", response);
-
-        setRoutes(response.data);
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      toast.error("Unable to fetch routes, please reload!");
-    } finally {
-      setLoadingRoutes(false);
+      await createTripHandler(tripData, onCreateTrip);
     }
   };
 
   useEffect(() => {
-    loadBuses();
-    loadRoutes();
+    if (!buses.length) {
+      loadBuses();
+    }
+
+    if (!routes.length!) {
+      loadRoutes();
+    }
   }, []);
 
   let routesToPlot: PLOT_ROUTE_TYPE[] = [];

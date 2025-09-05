@@ -1,6 +1,6 @@
 import React from "react";
 import BusIcon from "@/svg-icons/bus.svg";
-import { BusType } from "../Forms/CreateBus";
+import { BusType } from "@/store/useBusesStore";
 
 type CardProps = {
   bus: BusType;

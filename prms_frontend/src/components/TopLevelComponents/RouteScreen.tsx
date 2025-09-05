@@ -2,25 +2,26 @@
 
 import Button from "../UI/Button/Button";
 import { useEffect, useState } from "react";
-import CreateRoute, { RouteType } from "../Forms/CreateRoute";
-import api, { ApiResponse } from "@/api/api";
-import { toast } from "react-toastify";
+import CreateRoute from "../Forms/CreateRoute";
 import LoadingSpinner from "../UI/LoadingSpinner/LoadingSpinner";
 import RouteCard from "../Cards/RouteCard";
+import useRoutesStore from "@/store/useRoutesStore";
+import { useShallow } from "zustand/shallow";
 
 enum VIEW_TYPES {
   LIST,
   FORM
 }
 
-const RouteList = ({
-  routes,
-  loading
-}: {
-  routes: RouteType[];
-  loading: boolean;
-}) => {
-  if (loading) {
+const RouteList = () => {
+  const { loadingRoutes, routes } = useRoutesStore(
+    useShallow((state) => ({
+      loadingRoutes: state.loadingRoutes,
+      routes: state.routes
+    }))
+  );
+
+  if (loadingRoutes) {
     return (
       <div className="w-full flex justify-center">
         <LoadingSpinner />
@@ -39,41 +40,27 @@ const RouteList = ({
 
 const RouteScreen = () => {
   const [view, setView] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
-  const [routes, setRoutes] = useState<RouteType[]>([]);
-  const [loadingRoutes, setLoadingRoutes] = useState(true);
-  const [editingRoute, setEditingRoute] = useState<RouteType | undefined>(
-    undefined
+  const { loadRoutes, editingRoute, routes } = useRoutesStore(
+    useShallow((state) => ({
+      loadRoutes: state.loadRoutes,
+      editingRoute: state.editingRoute,
+      routes: state.routes
+    }))
   );
 
-  const loadRoutes = async () => {
-    try {
-      const response: ApiResponse<RouteType[]> = await api.get("/routes");
-      if (response.success) {
-        console.log("routes", response);
-
-        setRoutes(response.data);
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      toast.error("Unable to fetch routes!");
-    } finally {
-      setLoadingRoutes(false);
-    }
-  };
-
   useEffect(() => {
-    loadRoutes();
+    if (!routes.length) {
+      loadRoutes();
+    }
   }, []);
 
-  let toRender = <RouteList routes={routes} loading={loadingRoutes} />;
+  let toRender = <RouteList />;
   if (view === VIEW_TYPES.FORM) {
     toRender = (
       <CreateRoute
         onCancel={() => setView(VIEW_TYPES.LIST)}
         routeData={editingRoute}
-        onCreateRoute={(newRoute) => {
-          setRoutes((prev) => [newRoute, ...prev]);
+        onCreateRoute={() => {
           setView(VIEW_TYPES.LIST);
         }}
       />

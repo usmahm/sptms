@@ -2,27 +2,16 @@ import Input from "@/components/UI/Input/Input";
 import Button from "@/components/UI/Button/Button";
 import DropDown, { OptionType } from "../UI/DropDown/DropDown";
 import MapComponent, { ACTION_TYPES } from "../MapComponent/MapComponent";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { LAT_LNG_TYPE } from "@/types";
 import { MARKER_PROP_TYPE } from "../CustomMarker/CustomMarker";
-import api, { ApiResponse } from "@/api/api";
-import { toast } from "react-toastify";
+import useBusStopsStore, { BusStopType } from "@/store/useBusStopsStore";
+import { useShallow } from "zustand/shallow";
 
 // Make this user location
 const center = {
   lat: 7.501217,
   lng: 4.502154
-};
-
-export type BusStopType = {
-  name: string;
-  code: string;
-  status: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
-  id: string;
 };
 
 const statusOptions = [
@@ -33,7 +22,7 @@ const statusOptions = [
 type CreateBusStopType = {
   onCancel: () => void;
   busStopData?: BusStopType;
-  onCreateBusStop: (newBusStop: BusStopType) => void;
+  onCreateBusStop: () => void;
 };
 
 const CreateBusStop: React.FC<CreateBusStopType> = ({
@@ -41,13 +30,18 @@ const CreateBusStop: React.FC<CreateBusStopType> = ({
   onCreateBusStop,
   busStopData
 }) => {
+  const { createBusStop, creatingBusStop } = useBusStopsStore(
+    useShallow((state) => ({
+      createBusStop: state.createBusStop,
+      creatingBusStop: state.creatingBusStop
+    }))
+  );
   const [newBusStopCoords, setNewBusStopCoords] = useState<LAT_LNG_TYPE | null>(
     null
   );
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<OptionType | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (busStopData) {
@@ -82,32 +76,18 @@ const CreateBusStop: React.FC<CreateBusStopType> = ({
   }
 
   const onSubmitHandler = async () => {
-    try {
-      setSubmitting(true);
+    if (name && code && status && newBusStopCoords) {
+      const busStopData = {
+        name,
+        code,
+        status: status.value,
+        location: newBusStopCoords
+      };
 
-      if (name && code && status && newBusStopCoords) {
-        const busStopData = {
-          name,
-          code,
-          status: status.value,
-          location: newBusStopCoords
-        };
-
-        const response: ApiResponse<BusStopType[]> = await api.post(
-          "/bus-stops",
-          busStopData
-        );
-        if (response.success) {
-          toast.success("Bus Stop Created Successfully!");
-          onCreateBusStop(response.data[0]);
-        } else {
-          throw new Error();
-        }
+      const success = await createBusStop(busStopData);
+      if (success) {
+        onCreateBusStop();
       }
-    } catch (err) {
-      toast.error("Unable to create new bus stop!");
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -178,7 +158,7 @@ const CreateBusStop: React.FC<CreateBusStopType> = ({
           label="Create Bus Stop"
           onClick={onSubmitHandler}
           disabled={!done}
-          loading={submitting}
+          loading={creatingBusStop}
         />
         <Button label="Cancel" onClick={onCancel} />
       </div>

@@ -43,8 +43,6 @@ export const getBusNodes = async (
     const { data, error } = await busNodesService.getAllBusNodes();
 
     if (error) {
-      console.log("HEYYY 111", error);
-
       return responseService.internalServerError(
         res,
         "Unexpected Error happened"
@@ -104,8 +102,6 @@ export const updateLocation = async (
       location
     };
 
-    // console.log("HEYYY 111", location);
-
     // Updates bus location
     const propertiesToReturn = Object.keys(update).join(" ");
     let { data, error } = await busNodesService.editBusNode(
@@ -132,8 +128,6 @@ export const updateLocation = async (
         "Unexpected Error happened"
       );
     }
-
-    console.log("HEYYY 1111", tripData, tripError);
 
     // [FIX]! hack fix later
     if (tripData) {
@@ -178,7 +172,6 @@ export const getBusNodeById = async (
 ) => {
   try {
     const node_id = req.params.node_id;
-    console.log("HEYYY 111", node_id);
 
     const { data, error } = await busNodesService.getBusNodeById(node_id);
 
