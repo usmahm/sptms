@@ -36,8 +36,6 @@ export const createTrip = async (
 
     const { data, error } = await tripsServices.createTrip(tripData);
 
-    console.log("HEYYY 1212", data, error);
-
     if (error) {
       return responseService.internalServerError(
         res,
@@ -117,7 +115,6 @@ export const getTrips = async (
 
     let parsedResponse = data;
 
-    console.log("HEYYY 111", parsedResponse);
     if (timezone && data) {
       // for esp nodes, fix timezone hardcoded
       parsedResponse = data?.map((tr) => ({
@@ -143,12 +140,9 @@ export const getTrips = async (
         })
       );
 
-      console.log("HEEYEYE", promises.length);
       const res = await Promise.all(promises);
       parsedResponse = parsedResponse.map((r, i) => {
         const duration = res[i].data.routes[0].legs[0].duration.value;
-
-        console.log("HEYYY 32323", duration);
 
         let estimated_arrival_time = dayjs().add(duration, "second").format();
         if (timezone) {
@@ -162,8 +156,6 @@ export const getTrips = async (
           estimated_arrival_time
         };
       });
-
-      // console.log("HEYYYY 000", res);
     }
 
     responseService.success(res, "Trips Fetched Successfully!", parsedResponse);

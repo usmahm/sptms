@@ -11,7 +11,8 @@ import PlotRoute, { PLOT_ROUTE_TYPE } from "../PlotRoute/PlotRoute";
 import { LAT_LNG_TYPE } from "@/types";
 import { Rectangle } from "@react-google-maps/api";
 import CustomMarker, { MARKER_PROP_TYPE } from "../CustomMarker/CustomMarker";
-import { RECTANGLE_BOUND } from "@/utils/utils";
+import { RECTANGLE_BOUND, toLatLngBounds } from "@/utils/utils";
+import { GeofenceType } from "@/store/useGeofenceStore";
 
 const containerStyle = {
   width: "100%",
@@ -34,7 +35,7 @@ type PropType = {
   markers?: MARKER_PROP_TYPE[];
   routesToPlot?: PLOT_ROUTE_TYPE[];
   isWithinGeoFence?: boolean;
-  geofenceBounds?: google.maps.LatLngBounds;
+  geofenceBounds?: GeofenceType["bound"];
 };
 
 const MapComponent: React.FC<PropType> = ({
@@ -149,7 +150,7 @@ const MapComponent: React.FC<PropType> = ({
 
       {geofenceBounds && (
         <Rectangle
-          bounds={geofenceBounds}
+          bounds={toLatLngBounds(geofenceBounds)}
           options={{
             // editable: true,
             // draggable: true,

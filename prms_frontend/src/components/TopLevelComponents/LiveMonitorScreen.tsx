@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "../UI/Button/Button";
 import EditIcon from "@/svg-icons/edit.svg";
 import DeleteIcon from "@/svg-icons/delete.svg";
@@ -7,10 +7,10 @@ import LiveMonitorIcon from "@/svg-icons/monitor.svg";
 import LoadingSpinner from "../UI/LoadingSpinner/LoadingSpinner";
 import MapComponent from "../MapComponent/MapComponent";
 import BusCard from "../Cards/BusCard";
-import CreateBus, { BusType } from "../Forms/CreateBus";
-import api, { ApiResponse } from "@/api/api";
-import { toast } from "react-toastify";
+import CreateBus from "../Forms/CreateBus";
 import { MARKER_PROP_TYPE } from "../CustomMarker/CustomMarker";
+import useBusesStore, { BusType } from "@/store/useBusesStore";
+import { useShallow } from "zustand/shallow";
 
 enum VIEW_TYPES {
   LIST,
@@ -23,19 +23,16 @@ const center = {
   lng: 4.502154
 };
 
-const FleetDashboard = ({
-  fleet,
-  loading,
-  selectedBus,
-  onSelectBus,
-  openNewBusForm
-}: {
-  fleet: BusType[];
-  loading: boolean;
-  onSelectBus: (bus: BusType) => void;
-  selectedBus?: BusType;
-  openNewBusForm: () => void;
-}) => {
+const FleetDashboard = ({ openNewBusForm }: { openNewBusForm: () => void }) => {
+  const { loadingBuses, buses, selectedBus, selectBusHandler } = useBusesStore(
+    useShallow((state) => ({
+      buses: state.buses,
+      loadingBuses: state.loadingBuses,
+      selectedBus: state.selectedBus,
+      selectBusHandler: state.selectBusHandler
+    }))
+  );
+
   let markers: MARKER_PROP_TYPE[] = [];
   if (selectedBus && selectedBus.location) {
     markers = [
@@ -56,13 +53,13 @@ const FleetDashboard = ({
           <Button label="+ Add Bus" onClick={openNewBusForm} />
         </div>
 
-        {loading ? (
+        {loadingBuses ? (
           <div className="w-full flex justify-center mt-3">
             <LoadingSpinner />
           </div>
         ) : (
-          fleet.map((g) => (
-            <BusCard key={g.id} bus={g} onClick={() => onSelectBus(g)} />
+          buses.map((g) => (
+            <BusCard key={g.id} bus={g} onClick={() => selectBusHandler(g)} />
           ))
         )}
       </div>
@@ -93,7 +90,7 @@ const FleetDashboard = ({
             <MapComponent center={center} markers={markers} />
           ) : (
             <div className="h-full w-full flex flex-col justify-center items-center">
-              <LiveMonitorIcon w-64 h-64 />
+              <LiveMonitorIcon />
               <p className="text-base text-slate-500 mt-6">
                 Select a bus to view real-time details
               </p>
@@ -106,47 +103,23 @@ const FleetDashboard = ({
 };
 
 const LiveMonitorScreen = () => {
-  const [view, setView] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
-  const [fleet, setFleet] = useState<BusType[]>([]);
-
-  const [loadingFleet, setLoadingFleet] = useState(true);
-  const [editingBus, setEditingBus] = useState<BusType | undefined>(undefined);
-
-  const [selectedBus, setSelectedBus] = useState<BusType | undefined>(
-    undefined
+  const { buses, editingBus, loadBuses } = useBusesStore(
+    useShallow((state) => ({
+      buses: state.buses,
+      editingBus: state.editingBus,
+      loadBuses: state.loadBuses
+    }))
   );
-
-  const loadFleet = async () => {
-    try {
-      const response: ApiResponse<BusType[]> = await api.get("/bus-nodes");
-
-      console.log("fleet", response);
-      if (response.success) {
-        setFleet(response.data);
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      toast.error("Unable to load buses!");
-    } finally {
-      setLoadingFleet(false);
-    }
-  };
+  const [view, setView] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
 
   useEffect(() => {
-    loadFleet();
+    if (!buses.length) {
+      loadBuses();
+    }
   }, []);
 
   let toRender = (
-    <FleetDashboard
-      fleet={fleet}
-      loading={loadingFleet}
-      selectedBus={selectedBus}
-      onSelectBus={(b) => {
-        setSelectedBus(b);
-      }}
-      openNewBusForm={() => setView(VIEW_TYPES.FORM)}
-    />
+    <FleetDashboard openNewBusForm={() => setView(VIEW_TYPES.FORM)} />
   );
 
   if (view === VIEW_TYPES.FORM) {
@@ -154,8 +127,7 @@ const LiveMonitorScreen = () => {
       <CreateBus
         onCancel={() => setView(VIEW_TYPES.LIST)}
         busData={editingBus}
-        onCreateBus={(newBus) => {
-          setFleet((prev) => [newBus, ...prev]);
+        onCreateBus={() => {
           setView(VIEW_TYPES.LIST);
         }}
       />

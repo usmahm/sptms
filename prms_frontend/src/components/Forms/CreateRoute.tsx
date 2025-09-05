@@ -3,13 +3,13 @@ import Button from "@/components/UI/Button/Button";
 import DropDown, { OptionType } from "../UI/DropDown/DropDown";
 import MapComponent, { ACTION_TYPES } from "../MapComponent/MapComponent";
 import { MARKER_PROP_TYPE } from "../CustomMarker/CustomMarker";
-import { LAT_LNG_TYPE } from "@/types";
 import React, { useEffect, useState } from "react";
-import api, { ApiResponse } from "@/api/api";
 import { toast } from "react-toastify";
 import { PLOT_ROUTE_TYPE } from "../PlotRoute/PlotRoute";
 import { mTokm, secToMin } from "@/utils/utils";
-import { BusStopType } from "./CreateBusStop";
+import useRoutesStore, { RouteType } from "@/store/useRoutesStore";
+import { useShallow } from "zustand/shallow";
+import useBusStopsStore, { BusStopType } from "@/store/useBusStopsStore";
 
 // Make this user location
 const center = {
@@ -22,42 +22,10 @@ const statusOptions = [
   { label: "Active", value: "ACTIVE" }
 ];
 
-// type L
-
-export type RouteType = {
-  name: string;
-  code: string;
-  start_bus_stop: {
-    code: string;
-    name: string;
-    location: LAT_LNG_TYPE;
-  };
-  end_bus_stop: {
-    code: string;
-    name: string;
-    location: LAT_LNG_TYPE;
-  };
-  expected_path: {
-    lat: number;
-    lng: number;
-  }[];
-  geo_fence: {
-    id: string;
-    bound: {
-      northEast: LAT_LNG_TYPE;
-      southWest: LAT_LNG_TYPE;
-    };
-  };
-  duration: number;
-  distance: number;
-  id: string;
-  status: string;
-};
-
 type CreateRouteType = {
   onCancel: () => void;
   routeData?: RouteType;
-  onCreateRoute: (newRoute: RouteType) => void;
+  onCreateRoute: () => void;
 };
 
 const CreateRoute: React.FC<CreateRouteType> = ({
@@ -65,9 +33,24 @@ const CreateRoute: React.FC<CreateRouteType> = ({
   routeData,
   onCreateRoute
 }) => {
+  const { createRoute, creatingRoute } = useRoutesStore(
+    useShallow((state) => ({
+      createRoute: state.createRoute,
+      creatingRoute: state.creatingRoute
+    }))
+  );
+  const { busStops, loadBusStops } = useBusStopsStore(
+    useShallow((state) => ({
+      busStops: state.busStops,
+      loadBusStops: state.loadBusStops
+    }))
+  );
+
   const [fetchedRoute, setFetchedRoute] = useState<
     google.maps.DirectionsResult | undefined
   >(undefined);
+  const [loadingRoute, setLoadingRoute] = useState(false);
+
   const [startStop, setStartStop] = useState<BusStopType | null>(null);
   const [endStop, setEndStop] = useState<BusStopType | null>(null);
   const [routedistDur, setRoutedistDur] = useState<{
@@ -78,55 +61,31 @@ const CreateRoute: React.FC<CreateRouteType> = ({
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<OptionType | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  const [busStops, setBusStops] = useState<BusStopType[]>([]);
-  const [loadingBusStops, setLoadingBusStops] = useState(true);
-  const [loadingRoute, setLoadingRoute] = useState(false);
 
   const onSubmitHandler = async () => {
-    try {
-      setSubmitting(true);
+    if (
+      name &&
+      code &&
+      startStop &&
+      endStop &&
+      status &&
+      routedistDur &&
+      fetchedRoute
+    ) {
+      const routeData = {
+        name,
+        code,
+        status: status.value,
+        start_bus_stop: startStop.id,
+        end_bus_stop: endStop.id,
+        expected_path: fetchedRoute.routes[0].overview_path.map((r) =>
+          r.toJSON()
+        ),
+        duration: routedistDur.duration,
+        distance: routedistDur.distance
+      };
 
-      if (
-        name &&
-        code &&
-        startStop &&
-        endStop &&
-        status &&
-        routedistDur &&
-        fetchedRoute
-      ) {
-        const routeData = {
-          name,
-          code,
-          status: status.value,
-          start_bus_stop: startStop.id,
-          end_bus_stop: endStop.id,
-          expected_path: fetchedRoute.routes[0].overview_path.map((r) =>
-            r.toJSON()
-          ),
-          duration: routedistDur.duration,
-          distance: routedistDur.distance
-        };
-
-        const response: ApiResponse<RouteType[]> = await api.post(
-          "/routes",
-          routeData
-        );
-
-        // console.log("routeData", response);
-        if (response.success) {
-          toast.success("Route Created Successfully!");
-          onCreateRoute(response.data[0]);
-        } else {
-          throw new Error();
-        }
-      }
-    } catch (err) {
-      toast.error("Unable to create Route!");
-    } finally {
-      setSubmitting(false);
+      await createRoute(routeData, onCreateRoute);
     }
   };
 
@@ -176,25 +135,10 @@ const CreateRoute: React.FC<CreateRouteType> = ({
     }
   }, [startStop, endStop]);
 
-  const loadBusStops = async () => {
-    try {
-      const response: ApiResponse<BusStopType[]> = await api.get("/bus-stops");
-      if (response.success) {
-        // console.log("busStopData", response);
-
-        setBusStops(response.data);
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      toast.error("Unable to fetch bus stops!");
-    } finally {
-      setLoadingBusStops(false);
-    }
-  };
-
   useEffect(() => {
-    loadBusStops();
+    if (!busStops.length) {
+      loadBusStops();
+    }
   }, []);
 
   let markers: MARKER_PROP_TYPE[] = busStops.map((b) => ({
@@ -334,7 +278,7 @@ const CreateRoute: React.FC<CreateRouteType> = ({
           label="Create Route"
           onClick={onSubmitHandler}
           disabled={!done}
-          loading={submitting}
+          loading={creatingRoute}
         />
         <Button label="Cancel" onClick={onCancel} />
       </div>

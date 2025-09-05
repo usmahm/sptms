@@ -6,17 +6,17 @@ import CreateTrip, { TripType } from "../Forms/CreateTrip.";
 import LoadingSpinner from "../UI/LoadingSpinner/LoadingSpinner";
 import MapComponent from "../MapComponent/MapComponent";
 import RoutesIcon from "@/svg-icons/routes-icon.svg";
-import EditIcon from "@/svg-icons/edit.svg";
-import DeleteIcon from "@/svg-icons/delete.svg";
 import TripCard from "../Cards/TripCard";
 import api, { ApiResponse } from "@/api/api";
 import { toast } from "react-toastify";
 import { LAT_LNG_TYPE } from "@/types";
 import dayjs from "dayjs";
-import { RouteType } from "../Forms/CreateRoute";
 import { MARKER_PROP_TYPE } from "../CustomMarker/CustomMarker";
 import { PLOT_ROUTE_TYPE } from "../PlotRoute/PlotRoute";
-import { checkIfBoundContains, mTokm, toLatLngBounds } from "@/utils/utils";
+import { checkIfBoundContains, mTokm } from "@/utils/utils";
+import { RouteType } from "@/store/useRoutesStore";
+import useTripsStore from "@/store/useTripsStore";
+import { useShallow } from "zustand/shallow";
 
 enum VIEW_TYPES {
   LIST,
@@ -147,7 +147,7 @@ const TripsDashboard = ({
               center={center}
               markers={markers}
               routesToPlot={routetoPlot}
-              geofenceBounds={toLatLngBounds(selectedTripRoute.geo_fence.bound)}
+              geofenceBounds={selectedTripRoute.geo_fence.bound}
               isWithinGeoFence={isWithinGeoFence}
             />
           ) : (
@@ -166,185 +166,36 @@ const TripsDashboard = ({
 
 const TripsScreen = () => {
   const [view, setView] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
-  const [trips, setTrips] = useState<TripType[]>([]);
-  const [selectedTrip, setSelectedTrip] = useState<TripType | undefined>(
-    undefined
+  const {
+    removeActiveTripUpdateEvent,
+    trips,
+    loadTrips,
+    selectedTrip,
+    loadingTrips,
+    selectedTripRoute,
+    selectTripHandler,
+    startTripHandler,
+    editingTrip
+  } = useTripsStore(
+    useShallow((state) => ({
+      trips: state.trips,
+      loadTrips: state.loadTrips,
+      loadingTrips: state.loadingTrips,
+      selectedTrip: state.selectedTrip,
+      selectedTripRoute: state.selectedTripRoute,
+      startTripHandler: state.startTripHandler,
+      selectTripHandler: state.selectTripHandler,
+      editingTrip: state.editingTrip,
+      removeActiveTripUpdateEvent: state.removeActiveTripUpdateEvent
+    }))
   );
-  const [selectedTripRoute, setSelectedTripRoute] = useState<
-    RouteType | undefined
-  >(undefined);
-
-  const [loadingTrips, setLoadingTrips] = useState(true);
-  const [editingTrip, setEditingTrip] = useState<TripType | undefined>(
-    undefined
-  );
-  const tripEvent = useRef<EventSource | null>(null);
-  const lastDurationTimeUpdate = useRef<string | null>(null);
-
-  // const [routedistDur, setRoutedistDur] = useState<{
-  //   distance: number;
-  //   duration: number;
-  // } | null>(null);
-
-  const updateArrivalTime = async (currentLocation: LAT_LNG_TYPE) => {
-    const isMoreThanOneMin =
-      Math.abs(dayjs().diff(dayjs(lastDurationTimeUpdate.current), "minute")) >=
-      1;
-
-    if (isMoreThanOneMin && selectedTripRoute) {
-      // fetch and update estimated arrival time
-      const directionService = new google.maps.DirectionsService();
-
-      const directionResult = await directionService.route({
-        origin: currentLocation,
-        destination: selectedTripRoute.end_bus_stop.location,
-        travelMode: google.maps.TravelMode.DRIVING
-      });
-
-      console.log("HEYYY 1111 UPDATING ARRIVAL TIME", directionResult);
-
-      setSelectedTripRoute((pr) => {
-        if (!pr) return pr;
-
-        if (
-          directionResult?.routes &&
-          directionResult.routes[0].legs &&
-          directionResult.routes[0].legs[0].distance &&
-          directionResult.routes[0].legs[0].duration
-        ) {
-          const newDistance = directionResult.routes[0].legs[0].distance.value;
-          const newDuration = directionResult.routes[0].legs[0].duration.value;
-
-          return {
-            ...pr,
-            duration: newDuration || pr.duration,
-            distance: newDistance || pr.distance
-          };
-        } else {
-          return pr;
-        }
-      });
-    }
-  };
-
-  const trackTrip = async (tripId: string) => {
-    try {
-      if (tripEvent.current) {
-        tripEvent.current.close();
-        tripEvent.current = null;
-      }
-
-      const events = new EventSource(
-        `${api.getUri()}/trips/path/events/${tripId}`
-      );
-      events.onmessage = (event) => {
-        console.log("HEYYY event data", event.data);
-        const parsedData: LAT_LNG_TYPE[] = JSON.parse(event.data);
-
-        setSelectedTrip((prev) => {
-          if (!prev) return prev;
-
-          return {
-            ...prev,
-            actual_path: [...prev.actual_path, ...parsedData]
-          };
-        });
-
-        updateArrivalTime(parsedData[parsedData.length - 1]);
-      };
-
-      tripEvent.current = events;
-    } catch {
-      toast.error("Unable to track trip, try again!");
-    }
-  };
-
-  const loadTrips = async () => {
-    try {
-      const response: ApiResponse<TripType[]> = await api.get("/trips");
-
-      console.log("trips", response);
-      if (response.success) {
-        setTrips(response.data);
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      toast.error("Unable to fetch routes!");
-    } finally {
-      setLoadingTrips(false);
-    }
-  };
-
-  const onStartTrip = async (tripId: string) => {
-    try {
-      const payload = {
-        actual_departure_time: dayjs().local().format()
-      };
-
-      const response: ApiResponse<TripType[]> = await api.patch(
-        `/trips/${tripId}`,
-        payload
-      );
-
-      if (response.success) {
-        const editedTrip = response.data[0];
-        setTrips((prev) =>
-          prev.map((tr) => {
-            if (tr.id === editedTrip.id) {
-              return editedTrip;
-            }
-
-            return tr;
-          })
-        );
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      toast.error("Unable to fetch routes!");
-    } finally {
-      setLoadingTrips(false);
-    }
-  };
-
-  const onSelectTrip = async (trip: TripType) => {
-    setSelectedTripRoute(undefined);
-    setSelectedTrip(trip);
-
-    if (trip.actual_departure_time && !trip.actual_arrival_time) {
-      trackTrip(trip.id);
-    }
-
-    try {
-      const response: ApiResponse<RouteType> = await api.get(
-        `/routes/${trip.route.id}`
-      );
-      if (response.success) {
-        console.log("routes", response);
-
-        setSelectedTripRoute(response.data);
-        // setRoutedistDur({
-        //   distance: response.data.distance,
-        //   duration: response.data.duration
-        // });
-      } else {
-        throw new Error();
-      }
-    } catch {
-      toast.error("Unable to fetch selected trip route");
-    }
-  };
 
   useEffect(() => {
-    loadTrips();
+    if (!trips.length) {
+      loadTrips();
+    }
 
-    return () => {
-      if (tripEvent.current) {
-        tripEvent.current.close();
-        tripEvent.current = null;
-      }
-    };
+    return () => removeActiveTripUpdateEvent();
   }, []);
 
   let toRender = (
@@ -353,8 +204,8 @@ const TripsScreen = () => {
       loading={loadingTrips}
       selectedTrip={selectedTrip}
       selectedTripRoute={selectedTripRoute}
-      onSelectTrip={onSelectTrip}
-      onStartTrip={onStartTrip}
+      onSelectTrip={selectTripHandler}
+      onStartTrip={startTripHandler}
     />
   );
   if (view === VIEW_TYPES.FORM) {
@@ -362,8 +213,7 @@ const TripsScreen = () => {
       <CreateTrip
         onCancel={() => setView(VIEW_TYPES.LIST)}
         tripData={editingTrip}
-        onCreateTrip={(newTrip) => {
-          setTrips((prev) => [newTrip, ...prev]);
+        onCreateTrip={() => {
           setView(VIEW_TYPES.LIST);
         }}
       />

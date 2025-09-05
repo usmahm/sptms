@@ -5,14 +5,13 @@ import Button from "../UI/Button/Button";
 import LocationIcon from "@/svg-icons/location.svg";
 import EditIcon from "@/svg-icons/edit.svg";
 import DeleteIcon from "@/svg-icons/delete.svg";
-import CreateGeofence, { GeofenceType } from "../Forms/CreateGeofence";
-import api, { ApiResponse } from "@/api/api";
-import { toast } from "react-toastify";
+import CreateGeofence from "../Forms/CreateGeofence";
 import GeofenceCard from "../Cards/GeofenceCard";
 import LoadingSpinner from "../UI/LoadingSpinner/LoadingSpinner";
 import MapComponent from "../MapComponent/MapComponent";
 import { PLOT_ROUTE_TYPE } from "../PlotRoute/PlotRoute";
-import { MARKER_PROP_TYPE } from "../CustomMarker/CustomMarker";
+import { useShallow } from "zustand/shallow";
+import useGeofenceStore, { GeofenceType } from "@/store/useGeofenceStore";
 
 enum VIEW_TYPES {
   LIST,
@@ -26,28 +25,22 @@ const center = {
 };
 
 const GeoFencingList = ({
-  geoFences,
-  loading,
   selectedGeofence,
   onSelectGeofence
 }: {
-  geoFences: GeofenceType[];
-  loading: boolean;
   onSelectGeofence: (geofence: GeofenceType) => void;
   selectedGeofence?: GeofenceType;
 }) => {
-  // if (loading) {
-  //   return (
-  //     <div className="w-full flex justify-center">
-  //       <LoadingSpinner />
-  //     </div>
-  //   );
-  // }
+  const { loadingGeofences, geofences } = useGeofenceStore(
+    useShallow((state) => ({
+      loadingGeofences: state.loadingGeofences,
+      geofences: state.geofences
+    }))
+  );
 
   let routesToPlot: PLOT_ROUTE_TYPE[] = [];
   if (selectedGeofence) {
-    const routeData = selectedGeofence.route;
-
+    // const routeData = selectedGeofence.route;
     // if (routeData) {
     //   routesToPlot = [
     //     {
@@ -71,12 +64,12 @@ const GeoFencingList = ({
           <h3 className="text-slate-900 text-base font-semibold">Geofences</h3>
         </div>
 
-        {loading ? (
+        {loadingGeofences ? (
           <div className="w-full flex justify-center mt-3">
             <LoadingSpinner />
           </div>
         ) : (
-          geoFences.map((g) => (
+          geofences.map((g) => (
             <GeofenceCard
               key={g.id}
               geoFence={g}
@@ -109,7 +102,11 @@ const GeoFencingList = ({
         </div>
         <div className="h-100  bg-blue-50">
           {selectedGeofence ? (
-            <MapComponent center={center} routesToPlot={routesToPlot} />
+            <MapComponent
+              center={center}
+              routesToPlot={routesToPlot}
+              geofenceBounds={selectedGeofence.bound}
+            />
           ) : (
             <div className="h-full w-full flex flex-col justify-center items-center">
               <LocationIcon w-64 h-64 />
@@ -125,42 +122,26 @@ const GeoFencingList = ({
 };
 
 const GeofencingScreen = () => {
+  const { loadGeofences, geofences, editingGeofence } = useGeofenceStore(
+    useShallow((state) => ({
+      loadGeofences: state.loadGeofences,
+      geofences: state.geofences,
+      editingGeofence: state.editingGeofence
+    }))
+  );
   const [view, setView] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
-  const [geofences, setGeofences] = useState<GeofenceType[]>([]);
-  const [loadingGeofences, setLoadingGeofences] = useState(true);
-  const [editingGeofence, setEditingGeofence] = useState<
-    GeofenceType | undefined
-  >(undefined);
   const [selectedGeofence, setSelectedGeofence] = useState<
     GeofenceType | undefined
   >(undefined);
 
-  const loadGeofences = async () => {
-    try {
-      const response: ApiResponse<GeofenceType[]> =
-        await api.get("/geo-fences");
-
-      console.log("routes", response);
-      if (response.success) {
-        setGeofences(response.data);
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      toast.error("Unable to fetch routes!");
-    } finally {
-      setLoadingGeofences(false);
-    }
-  };
-
   useEffect(() => {
-    loadGeofences();
+    if (!geofences.length) {
+      loadGeofences();
+    }
   }, []);
 
   let toRender = (
     <GeoFencingList
-      geoFences={geofences}
-      loading={loadingGeofences}
       selectedGeofence={selectedGeofence}
       onSelectGeofence={(g) => setSelectedGeofence(g)}
     />
@@ -170,8 +151,7 @@ const GeofencingScreen = () => {
       <CreateGeofence
         onCancel={() => setView(VIEW_TYPES.LIST)}
         geoFenceData={editingGeofence}
-        onCreateGeofence={(newGeofence) => {
-          setGeofences((prev) => [newGeofence, ...prev]);
+        onCreateGeofence={() => {
           setView(VIEW_TYPES.LIST);
         }}
       />

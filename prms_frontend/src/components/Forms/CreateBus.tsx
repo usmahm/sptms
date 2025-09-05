@@ -2,28 +2,18 @@ import { useState } from "react";
 import Button from "../UI/Button/Button";
 import Input from "../UI/Input/Input";
 import DropDown, { OptionType } from "../UI/DropDown/DropDown";
-import api, { ApiResponse } from "@/api/api";
-import { toast } from "react-toastify";
-import { LAT_LNG_TYPE } from "@/types";
+import useBusesStore, { BusType } from "@/store/useBusesStore";
+import { useShallow } from "zustand/shallow";
 
 const statusOptions = [
   { label: "Inactive", value: "INACTIVE" },
   { label: "Active", value: "ACTIVE" }
 ];
 
-export type BusType = {
-  id: string;
-  name: string;
-  code: string;
-  status: string;
-  location?: LAT_LNG_TYPE;
-  // capacity: number;
-};
-
 type CreateBusType = {
   onCancel: () => void;
   busData?: BusType;
-  onCreateBus: (newBus: BusType) => void;
+  onCreateBus: () => void;
 };
 
 const CreateBus: React.FC<CreateBusType> = ({
@@ -31,37 +21,26 @@ const CreateBus: React.FC<CreateBusType> = ({
   busData,
   onCreateBus
 }) => {
+  const { createBus, creatingBus } = useBusesStore(
+    useShallow((state) => ({
+      creatingBus: state.creatingBus,
+      createBus: state.createBus
+    }))
+  );
+
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<OptionType | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
   const onSubmitHandler = async () => {
-    try {
-      setSubmitting(true);
+    if (name && code && status) {
+      const busData = {
+        name,
+        code,
+        status: status.value
+      };
 
-      if (name && code && status) {
-        const busData = {
-          name,
-          code,
-          status: status.value
-        };
-
-        const response: ApiResponse<BusType[]> = await api.post(
-          "/bus-nodes",
-          busData
-        );
-        if (response.success) {
-          toast.success("Bus Created Successfully!");
-          onCreateBus(response.data[0]);
-        } else {
-          throw new Error();
-        }
-      }
-    } catch (err) {
-      toast.error("Unable to create new bus!");
-    } finally {
-      setSubmitting(false);
+      await createBus(busData, onCreateBus);
     }
   };
 
@@ -108,7 +87,7 @@ const CreateBus: React.FC<CreateBusType> = ({
           label="Create Bus"
           onClick={onSubmitHandler}
           disabled={!done}
-          loading={submitting}
+          loading={creatingBus}
         />
         <Button label="Cancel" onClick={onCancel} />
       </div>

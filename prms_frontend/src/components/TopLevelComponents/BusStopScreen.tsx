@@ -1,31 +1,27 @@
 "use client";
 
 import Button from "@/components/UI/Button/Button";
-import LocationIcon from "@/svg-icons/location.svg";
-import LocationIcon2 from "@/svg-icons/location-2.svg";
-import EditIcon from "@/svg-icons/edit.svg";
-import DeleteIcon from "@/svg-icons/delete.svg";
 import { useEffect, useState } from "react";
-import CreateBusStop, { BusStopType } from "../Forms/CreateBusStop";
-import { toast } from "react-toastify";
-import api, { ApiResponse } from "@/api/api";
-import { BUS_STOP_TYPE } from "@/types";
+import CreateBusStop from "../Forms/CreateBusStop";
 import LoadingSpinner from "../UI/LoadingSpinner/LoadingSpinner";
 import BusStopCard from "../Cards/BusStopCard";
+import useBusStopsStore from "@/store/useBusStopsStore";
+import { useShallow } from "zustand/shallow";
 
 enum VIEW_TYPES {
   LIST,
   FORM
 }
 
-const BusStopList = ({
-  busStops,
-  loading
-}: {
-  busStops: BusStopType[];
-  loading: boolean;
-}) => {
-  if (loading) {
+const BusStopList = () => {
+  const { busStops, loadingBusStops } = useBusStopsStore(
+    useShallow((state) => ({
+      busStops: state.busStops,
+      loadingBusStops: state.loadingBusStops
+    }))
+  );
+
+  if (loadingBusStops) {
     return (
       <div className="w-full flex justify-center">
         <LoadingSpinner />
@@ -43,42 +39,28 @@ const BusStopList = ({
 };
 
 const BusStopScreen = () => {
-  const [view, setView] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
-  const [busStops, setBusStops] = useState<BusStopType[]>([]);
-  const [editingBusStop, setEditingBusStop] = useState<BusStopType | undefined>(
-    undefined
+  const { busStops, loadBusStops, editingBusStop } = useBusStopsStore(
+    useShallow((state) => ({
+      loadBusStops: state.loadBusStops,
+      busStops: state.busStops,
+      editingBusStop: state.editingBusStop
+    }))
   );
-  const [loadingBusStops, setLoadingBusStops] = useState(true);
-
-  const loadBusStops = async () => {
-    try {
-      const response: ApiResponse<BusStopType[]> = await api.get("/bus-stops");
-      if (response.success) {
-        // console.log("busStopData", response);
-
-        setBusStops(response.data);
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      toast.error("Unable to fetch bus stops!");
-    } finally {
-      setLoadingBusStops(false);
-    }
-  };
+  const [view, setView] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
 
   useEffect(() => {
-    loadBusStops();
-  }, []);
+    if (!busStops.length) {
+      loadBusStops();
+    }
+  }, [busStops, loadBusStops]);
 
-  let toRender = <BusStopList busStops={busStops} loading={loadingBusStops} />;
+  let toRender = <BusStopList />;
   if (view === VIEW_TYPES.FORM) {
     toRender = (
       <CreateBusStop
         busStopData={editingBusStop}
         onCancel={() => setView(VIEW_TYPES.LIST)}
-        onCreateBusStop={(newBusStop) => {
-          setBusStops((prev) => [newBusStop, ...prev]);
+        onCreateBusStop={() => {
           setView(VIEW_TYPES.LIST);
         }}
       />
