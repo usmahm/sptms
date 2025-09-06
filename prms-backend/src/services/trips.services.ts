@@ -124,15 +124,20 @@ const getTripById = async (id: string, fields?: string) => {
   return { data, error };
 };
 
-// [FIX]!: Implement properly
+// A bus should only be on a trip at a time
 const getOnGoingTripByBusId = async (bus_id: string, fields?: string) => {
+  const currentDateTime = dayjs.utc().format();
+
   const { data, error } = await supabase
     .from("trips")
     .select(fields)
-    .eq("bus", bus_id);
+    .eq("bus", bus_id)
+    .is("actual_arrival_time", null)
+    .lte("actual_departure_time", currentDateTime)
+    .single();
 
   return { data, error } as {
-    data: Partial<TripType>[] | null;
+    data: Partial<TripType> | null;
     error: PostgrestError | null;
   };
 };

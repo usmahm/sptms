@@ -21,7 +21,7 @@ export type RouteType = {
     lat: number;
     lng: number;
   }[];
-  geo_fence: Pick<GeofenceType, "id" | "bound">;
+  geo_fence: Pick<GeofenceType, "id" | "bound"> | null;
   duration: number;
   distance: number;
   id: string;

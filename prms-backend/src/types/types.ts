@@ -3,6 +3,11 @@ export type LAT_LNG_TYPE = {
   lng: number;
 };
 
+export type RECTANGLE_BOUND = {
+  northEast: LAT_LNG_TYPE;
+  southWest: LAT_LNG_TYPE;
+};
+
 export type RouteType = {
   name: string;
   code: string;

@@ -131,6 +131,51 @@ export type Database = {
         };
         Relationships: [];
       };
+      notifications: {
+        Row: {
+          bus_id: string | null;
+          created_at: string;
+          id: number;
+          payload: Json | null;
+          read: boolean;
+          trip_id: string | null;
+          type: string | null;
+        };
+        Insert: {
+          bus_id?: string | null;
+          created_at?: string;
+          id?: number;
+          payload?: Json | null;
+          read?: boolean;
+          trip_id?: string | null;
+          type?: string | null;
+        };
+        Update: {
+          bus_id?: string | null;
+          created_at?: string;
+          id?: number;
+          payload?: Json | null;
+          read?: boolean;
+          trip_id?: string | null;
+          type?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notification_bus_id_fkey";
+            columns: ["bus_id"];
+            isOneToOne: false;
+            referencedRelation: "bus_nodes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notification_trip_id_fkey";
+            columns: ["trip_id"];
+            isOneToOne: false;
+            referencedRelation: "trips";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       routes: {
         Row: {
           code: string | null;

@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
+import { Server } from "socket.io";
 import logger from "./middleware/logger";
 // import config from "./config/config";
 
@@ -7,6 +8,7 @@ import { errorHandler } from "./middleware/error-handler";
 import responseService from "./utils/responseService";
 import router from "./routes/routes";
 import config from "./config/config";
+import { createServer } from "http";
 
 const app = express();
 
@@ -33,4 +35,20 @@ app.use(function (req: Request, res: Response) {
   responseService.notFoundError(res, "Invalid Request");
 });
 
-export default app;
+const httpServer = createServer(app);
+
+export const io = new Server(httpServer, {
+  cors: {
+    origin: config.FRONTEND_ORIGIN
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log("New client connected");
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
+  });
+});
+
+export default httpServer;

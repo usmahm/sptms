@@ -109,7 +109,7 @@ const GeoFencingList = ({
             />
           ) : (
             <div className="h-full w-full flex flex-col justify-center items-center">
-              <LocationIcon w-64 h-64 />
+              <LocationIcon />
               <p className="text-base text-slate-500 mt-6">
                 Select a geofence from the list to view details
               </p>

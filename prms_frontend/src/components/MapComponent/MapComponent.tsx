@@ -35,7 +35,7 @@ type PropType = {
   markers?: MARKER_PROP_TYPE[];
   routesToPlot?: PLOT_ROUTE_TYPE[];
   isWithinGeoFence?: boolean;
-  geofenceBounds?: GeofenceType["bound"];
+  geofenceBounds?: GeofenceType["bound"] | null;
 };
 
 const MapComponent: React.FC<PropType> = ({

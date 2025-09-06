@@ -58,7 +58,7 @@ const TripsDashboard = ({
     }));
   }
 
-  if (selectedTrip) {
+  if (selectedTrip?.actual_path?.length) {
     markers.push({
       label: selectedTrip.bus.code,
       position: selectedTrip.actual_path[selectedTrip.actual_path.length - 1]
@@ -78,7 +78,12 @@ const TripsDashboard = ({
 
   // [FIX]!
   let isWithinGeoFence = true;
-  if (selectedTrip && selectedTripRoute) {
+  if (
+    selectedTrip &&
+    selectedTrip.actual_path.length &&
+    selectedTripRoute &&
+    selectedTripRoute.geo_fence
+  ) {
     const currentLocation =
       selectedTrip.actual_path[selectedTrip.actual_path.length - 1];
     isWithinGeoFence = checkIfBoundContains(
@@ -86,8 +91,6 @@ const TripsDashboard = ({
       currentLocation
     );
   }
-
-  console.log("HEYYY 1212", isWithinGeoFence, selectedTrip);
 
   return (
     <div className="grid grid-cols-[329px_1fr] gap-x-6 ">
@@ -147,7 +150,9 @@ const TripsDashboard = ({
               center={center}
               markers={markers}
               routesToPlot={routetoPlot}
-              geofenceBounds={selectedTripRoute.geo_fence.bound}
+              geofenceBounds={
+                selectedTripRoute.geo_fence && selectedTripRoute.geo_fence.bound
+              }
               isWithinGeoFence={isWithinGeoFence}
             />
           ) : (

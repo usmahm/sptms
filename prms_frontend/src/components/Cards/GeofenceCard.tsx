@@ -12,7 +12,6 @@ type CardProps = {
 };
 
 const GeofenceCard: React.FC<CardProps> = ({ geoFence, onClick }) => {
-  console.log("HEYYEYEYsdsd", geoFence);
   return (
     <button
       className="flex justify-between bg-white border-b border-gray-200 p-4 w-full cursor-pointer"
@@ -43,7 +42,7 @@ const GeofenceCard: React.FC<CardProps> = ({ geoFence, onClick }) => {
       <div className="flex justify-between">
         {/* <button
           className="flex justify-center items-center w-8 h-8"
-          onClick={() => {}}
+          onClick={() => {}}8
         >
           <EditIcon />
         </button>
