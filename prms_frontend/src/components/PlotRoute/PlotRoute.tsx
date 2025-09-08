@@ -45,7 +45,7 @@ const PlotRoute: React.FC<PLOT_ROUTE_TYPE> = ({
           draggable={false}
         />
       )}
-      {visible && path.length && (
+      {visible && path.length > 0 && (
         <Polyline
           path={visible ? path : []}
           options={pathOptions}

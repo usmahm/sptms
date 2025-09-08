@@ -83,11 +83,9 @@ export const getUnreadNotificationsCount = async (
   next: NextFunction
 ) => {
   try {
-    console.log("HEYYYYY sdsd");
     const { count, error } =
       await notificationsServices.getUnreadNotificationsCount();
 
-    console.log("HEYYY 111", count);
     if (error) {
       return responseService.internalServerError(
         res,

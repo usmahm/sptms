@@ -111,16 +111,15 @@ const CreateTrip: React.FC<CreateGeoFenceType> = ({
 
   let routesToPlot: PLOT_ROUTE_TYPE[] = [];
   if (route) {
-    const routeData = routes.find((r) => (r.id = route.value));
+    const routeData = routes.find((r) => r.id == route.value);
 
     if (routeData) {
       routesToPlot = [
         {
-          origin: routeData.expected_path[0],
-          originLabel: "Origin",
-          destination:
-            routeData.expected_path[routeData.expected_path.length - 1],
-          destinationLabel: "Destination",
+          origin: routeData.start_bus_stop.location,
+          originLabel: `Origin: ${routeData.start_bus_stop.name}`,
+          destination: routeData.end_bus_stop.location,
+          destinationLabel: `Destination: ${routeData.end_bus_stop.name}`,
           path: routeData.expected_path,
           color: "#166534",
           visible: true
@@ -146,7 +145,11 @@ const CreateTrip: React.FC<CreateGeoFenceType> = ({
               label: r.name,
               value: r.id
             }))}
-            onClick={(v) => setRoute(v)}
+            onClick={(v) => {
+              setRoute(null);
+
+              setRoute(v);
+            }}
           />
 
           <DropDown

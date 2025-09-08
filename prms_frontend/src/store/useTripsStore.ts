@@ -156,7 +156,7 @@ const useTripsStore = create<ITripsStore>()((set, get) => ({
       );
 
       if (response.success) {
-        console.log("routes", response);
+        console.log("routes", response, trip);
 
         set({ selectedTripRoute: response.data });
       } else {
@@ -178,6 +178,7 @@ const useTripsStore = create<ITripsStore>()((set, get) => ({
         `${api.getUri()}/trips/path/events/${tripId}`
       );
 
+      let firstLoad = true;
       events.onmessage = (event) => {
         console.log("HEYYY event data", event.data);
         const parsedData: LAT_LNG_TYPE[] = JSON.parse(event.data);
@@ -188,16 +189,17 @@ const useTripsStore = create<ITripsStore>()((set, get) => ({
               return {
                 selectedTrip: {
                   ...state.selectedTrip,
-                  actual_path: [
-                    ...state.selectedTrip.actual_path,
-                    ...parsedData
-                  ]
+                  actual_path: firstLoad
+                    ? parsedData
+                    : [...state.selectedTrip.actual_path, ...parsedData]
                 }
               };
             }
 
             return {};
           });
+
+          firstLoad = false;
 
           get().updateArrivalTime(parsedData[parsedData.length - 1]);
         }

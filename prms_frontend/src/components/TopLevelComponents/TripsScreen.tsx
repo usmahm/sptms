@@ -29,23 +29,24 @@ const center = {
   lng: 4.502154
 };
 
-const TripsDashboard = ({
-  trips,
-  loading,
-  selectedTrip,
-  onSelectTrip,
-  onStartTrip,
-  selectedTripRoute
-  // openNewBusForm
-}: {
-  trips: TripType[];
-  loading: boolean;
-  onSelectTrip: (bus: TripType) => void;
-  onStartTrip: (busId: string) => void;
-  selectedTrip?: TripType;
-  selectedTripRoute?: RouteType;
-  // openNewBusForm: () => void;
-}) => {
+const TripsDashboard = ({}) => {
+  const {
+    trips,
+    selectedTrip,
+    loadingTrips,
+    selectedTripRoute,
+    selectTripHandler,
+    startTripHandler
+  } = useTripsStore(
+    useShallow((state) => ({
+      trips: state.trips,
+      loadingTrips: state.loadingTrips,
+      selectedTrip: state.selectedTrip,
+      selectedTripRoute: state.selectedTripRoute,
+      startTripHandler: state.startTripHandler,
+      selectTripHandler: state.selectTripHandler
+    }))
+  );
   let markers: MARKER_PROP_TYPE[] = [];
 
   if (selectedTripRoute) {
@@ -100,7 +101,7 @@ const TripsDashboard = ({
           {/* <Button label="+ Add Bus" onClick={openNewBusForm} /> */}
         </div>
 
-        {loading ? (
+        {loadingTrips ? (
           <div className="w-full flex justify-center mt-3">
             <LoadingSpinner />
           </div>
@@ -110,8 +111,8 @@ const TripsDashboard = ({
               key={trip.id}
               trip={trip}
               selected={trip.id === selectedTrip?.id}
-              onClick={() => onSelectTrip(trip)}
-              onStartTrip={() => onStartTrip(trip.id)}
+              onClick={() => selectTripHandler(trip)}
+              onStartTrip={() => startTripHandler(trip.id)}
             />
           ))
         )}
@@ -171,29 +172,15 @@ const TripsDashboard = ({
 
 const TripsScreen = () => {
   const [view, setView] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
-  const {
-    removeActiveTripUpdateEvent,
-    trips,
-    loadTrips,
-    selectedTrip,
-    loadingTrips,
-    selectedTripRoute,
-    selectTripHandler,
-    startTripHandler,
-    editingTrip
-  } = useTripsStore(
-    useShallow((state) => ({
-      trips: state.trips,
-      loadTrips: state.loadTrips,
-      loadingTrips: state.loadingTrips,
-      selectedTrip: state.selectedTrip,
-      selectedTripRoute: state.selectedTripRoute,
-      startTripHandler: state.startTripHandler,
-      selectTripHandler: state.selectTripHandler,
-      editingTrip: state.editingTrip,
-      removeActiveTripUpdateEvent: state.removeActiveTripUpdateEvent
-    }))
-  );
+  const { removeActiveTripUpdateEvent, trips, loadTrips, editingTrip } =
+    useTripsStore(
+      useShallow((state) => ({
+        trips: state.trips,
+        loadTrips: state.loadTrips,
+        editingTrip: state.editingTrip,
+        removeActiveTripUpdateEvent: state.removeActiveTripUpdateEvent
+      }))
+    );
 
   useEffect(() => {
     if (!trips.length) {
@@ -203,16 +190,7 @@ const TripsScreen = () => {
     return () => removeActiveTripUpdateEvent();
   }, []);
 
-  let toRender = (
-    <TripsDashboard
-      trips={trips}
-      loading={loadingTrips}
-      selectedTrip={selectedTrip}
-      selectedTripRoute={selectedTripRoute}
-      onSelectTrip={selectTripHandler}
-      onStartTrip={startTripHandler}
-    />
-  );
+  let toRender = <TripsDashboard />;
   if (view === VIEW_TYPES.FORM) {
     toRender = (
       <CreateTrip

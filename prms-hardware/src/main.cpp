@@ -42,7 +42,7 @@ void loop()
     lastGpsReadTime = currentTime;
   }
 
-  if (locationUpdated && (currentTime - lastSendTime >= 20000)) {
+  if (locationUpdated && (currentTime - lastSendTime >= 10000)) {
     sendLocationData(locationData);
     
     lastSendTime = currentTime;

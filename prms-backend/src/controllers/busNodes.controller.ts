@@ -10,7 +10,7 @@ import {
 import tripsServices from "../services/trips.services";
 import { Tables } from "../types/database.types";
 import { tripsEventClients } from "./trips.controller";
-import { checkIfBoundContains } from "../utils/utils";
+import { checkIfBoundContains, haversineDistance } from "../utils/utils";
 import notificationsServices, {
   GeofenceViolationNotification
 } from "../services/notifications.services";
@@ -164,44 +164,65 @@ export const updateLocation = async (
         };
       } = tripData;
 
-      await tripsServices.editTrip(trData.id, {
-        actual_path: [...trData.actual_path, location]
-      });
+      // only append if it is not same place (i.e not noise, put a threshold)
+      let hasMovedEnough = true;
+      if (trData.actual_path.length > 0) {
+        const THRESHOLD = 5; // meters
+        hasMovedEnough =
+          haversineDistance(
+            location,
+            trData.actual_path[trData.actual_path.length - 1]
+          ) > THRESHOLD;
 
-      const tripEvent = tripsEventClients.find(
-        (tr) => tr.trip_id === trData.id
-      );
-
-      if (tripEvent) {
-        const resData = `data: ${JSON.stringify([location])}\n\n`;
-        tripEvent.response.write(resData);
+        // console.log(
+        //   "HEYYYY88888",
+        //   trData.actual_path[trData.actual_path.length - 1],
+        //   haversineDistance(
+        //     location,
+        //     trData.actual_path[trData.actual_path.length - 1]
+        //   )
+        // );
       }
 
-      const isWithinGeoFence = checkIfBoundContains(
-        trData.route.geo_fence.bound,
-        location
-      );
+      if (hasMovedEnough) {
+        await tripsServices.editTrip(trData.id, {
+          actual_path: [...trData.actual_path, location]
+        });
 
-      if (!isWithinGeoFence) {
-        const { data: tripNot, error: tripNotError } =
-          await notificationsServices.getNotificationByTripId(trData.id);
+        const tripEvent = tripsEventClients.find(
+          (tr) => tr.trip_id === trData.id
+        );
+        // console.log("HEYYY 111 REACC", trData);
 
-        if (!tripNot) {
-          const notificationData: GeofenceViolationNotification = {
-            type: "GEOFENCE_VIOLATION",
-            trip_id: trData.id,
-            payload: {
-              route_path: [...trData.actual_path, location]
-            }
-          };
+        if (tripEvent) {
+          const resData = `data: ${JSON.stringify([location])}\n\n`;
+          tripEvent.response.write(resData);
+        }
 
+        const isWithinGeoFence = checkIfBoundContains(
+          trData.route.geo_fence.bound,
+          location
+        );
+
+        if (!isWithinGeoFence) {
           const { data: tripNot, error: tripNotError } =
-            await notificationsServices.createNotification(notificationData);
+            await notificationsServices.getNotificationByTripId(trData.id);
 
-          // console.log("HEYYY 10101010", tripNot, error);
+          if (!tripNot) {
+            const notificationData: GeofenceViolationNotification = {
+              type: "GEOFENCE_VIOLATION",
+              trip_id: trData.id,
+              payload: {
+                route_path: [...trData.actual_path, location]
+              }
+            };
 
-          if (tripNot) {
-            io.emit("notification", tripNot);
+            const { data: tripNot, error: tripNotError } =
+              await notificationsServices.createNotification(notificationData);
+
+            if (tripNot) {
+              io.emit("notification", tripNot);
+            }
           }
         }
       }

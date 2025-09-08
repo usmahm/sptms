@@ -57,8 +57,6 @@ const useRoutesStore = create<IRoutesStore>()((set) => ({
     try {
       const response: ApiResponse<RouteType[]> = await api.get("/routes");
       if (response.success) {
-        console.log("routes", response);
-
         set({ routes: response.data });
       } else {
         throw new Error();
