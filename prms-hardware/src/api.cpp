@@ -1,28 +1,34 @@
 #include "api.h"
 
-void apiSetup();
+WiFiClientSecure *client = new WiFiClientSecure;
+
+void apiSetup() {
+  if (client) {
+    client->setInsecure();
+  }
+};
 
 String httpGETRequest(String apiURL) {
   String response = "{}";
 
   if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
+    HTTPClient https;
   
-    http.begin(apiURL);
+    https.begin(*client, apiURL);
   
-    int httpResponseCode = http.GET();
+    int httpResponseCode = https.GET();
   
-  
+    
     if (httpResponseCode > 0) {
       Serial.print("HTTP Response code: ");
       Serial.println(httpResponseCode);
-      response = http.getString();
+      response = https.getString();
     } else {
       Serial.print("Error code: ");
       Serial.println(httpResponseCode);
     }
   
-    http.end();
+    https.end();
   } else {
     Serial.println("WiFi Disconnected");
   }
@@ -34,25 +40,24 @@ String httpPOSTRequest(String apiURL, String payload) {
   String response = "{}";
 
   if (WiFi.status() == WL_CONNECTED) {
-    WiFiClient client;
-    HTTPClient http;
+    HTTPClient https;
 
-    http.begin(client, apiURL);
+    https.begin(*client, apiURL);
 
-    http.addHeader("Content-Type", "application/json");
-    int httpResponseCode = http.POST(payload);
+    https.addHeader("Content-Type", "application/json");
+    int httpResponseCode = https.POST(payload);
 
     
     if (httpResponseCode > 0) {
       Serial.print("HTTP Response code: ");
       Serial.println(httpResponseCode);
-      response = http.getString();
+      response = https.getString();
     } else {
       Serial.print("Error code: ");
       Serial.println(httpResponseCode);
     }
 
-    http.end();
+    https.end();
   } else {
     Serial.println("WiFi Disconnected");
   }
@@ -60,30 +65,27 @@ String httpPOSTRequest(String apiURL, String payload) {
   return response;
 };
 
-String httpPATCHRequest(String apiURL, String payload) {
-  // Serial.println("Sending PATCH to: " + apiURL);
-  
+String httpPATCHRequest(String apiURL, String payload) {  
   String response = "{}";
 
   if (WiFi.status() == WL_CONNECTED) {
-    WiFiClient client;
-    HTTPClient http;
+    HTTPClient https;
 
-    http.begin(client, apiURL);
+    https.begin(*client, apiURL);
 
-    http.addHeader("Content-Type", "application/json");
-    int httpResponseCode = http.PATCH(payload);
+    https.addHeader("Content-Type", "application/json");
+    int httpResponseCode = https.PATCH(payload);
 
     if (httpResponseCode > 0) {
       Serial.print("HTTP Response code: ");
       Serial.println(httpResponseCode);
-      response = http.getString();
+      response = https.getString();
     } else {
       Serial.print("Error code: ");
       Serial.println(httpResponseCode);
     }
 
-    http.end();
+    https.end();
   } else {
     Serial.println("WiFi Disconnected");
   }
@@ -104,12 +106,10 @@ void sendLocationData(location locData) {
 
   Serial.println(serializedPayload);
 
-  httpGETRequest("https://prms-qs5z.onrender.com/health");
   String endpoint = String(API_URL) + "/bus-nodes/" + String(BUS_ID) + "/location";
 
   Serial.println(endpoint);
-  // String response = httpPATCHRequest(endpoint, serializedPayload);
-  String response = httpPOSTRequest(endpoint, serializedPayload);
+  String response = httpPATCHRequest(endpoint, serializedPayload);
 
   // Return if success or not handle that case outisde, hence retry early
 };

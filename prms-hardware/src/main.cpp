@@ -19,6 +19,7 @@ void setup()
   Serial.begin(115200);
   delay(100);
 
+  apiSetup();
   initLEDPins(pins, 2);
   changeLEDState(powerIndicator, 1);
 
@@ -29,7 +30,6 @@ void setup()
 unsigned long lastSendTime = 0;
 unsigned long lastGpsReadTime = 0;
 unsigned long currentTime = 0;
-
 
 void loop()
 {
@@ -42,15 +42,10 @@ void loop()
     lastGpsReadTime = currentTime;
   }
 
-  if (locationUpdated && (currentTime - lastSendTime >= 30000)) {
+  if (locationUpdated && (currentTime - lastSendTime >= 20000)) {
     sendLocationData(locationData);
     
     lastSendTime = currentTime;
     locationUpdated = false;
   }
-
-  // delay(30000);
 }
-
-
-
