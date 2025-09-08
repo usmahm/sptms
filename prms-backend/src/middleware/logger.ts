@@ -9,7 +9,7 @@ const logger = (req: Request, res: Response, next: NextFunction) => {
     };
     const log = `
 ============================
-${req.method}: ${req.path}
+${req.method}: ${req.originalUrl}
 BODY: ${JSON.stringify(req.body)}
 RESPONSE: ${JSON.stringify(response)}
 ============================
