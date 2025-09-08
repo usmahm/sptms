@@ -68,13 +68,18 @@ const TripsDashboard = ({}) => {
 
   let routetoPlot: PLOT_ROUTE_TYPE[] = [];
   if (selectedTripRoute) {
-    routetoPlot = [
-      {
-        path: selectedTripRoute.expected_path,
-        color: "#008000",
-        visible: true
-      }
-    ];
+    routetoPlot.push({
+      path: selectedTripRoute.expected_path,
+      color: "#1d4ed8",
+      visible: true
+    });
+  }
+  if (selectedTrip?.actual_path) {
+    routetoPlot.push({
+      path: selectedTrip.actual_path,
+      color: "#008000",
+      visible: true
+    });
   }
 
   // [FIX]!
