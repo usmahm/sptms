@@ -260,6 +260,8 @@ export const updateLocationPost = async (
       location
     };
 
+    console.log("HEYYY 222", update);
+
     // Updates bus location
     const propertiesToReturn = Object.keys(update).join(" ");
     let { data, error } = await busNodesService.editBusNode(
@@ -268,6 +270,7 @@ export const updateLocationPost = async (
       propertiesToReturn
     );
 
+    console.log("HWYYY 333", data);
     if (error) {
       return responseService.internalServerError(
         res,
