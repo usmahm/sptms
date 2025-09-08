@@ -4,7 +4,14 @@
 
 #include "customWifi.h"
 #include "gps-module.h"
+#include "led.h"
+#include "env.h"
 #include "api.h"
+
+
+int pins[2] = {POWER_INDICATOR, GPS_INDICATOR};
+LED_Struct powerIndicator(POWER_INDICATOR, 500);
+LED_Struct sdsd(GPS_INDICATOR, 1000);
 
 void setup()
 {
@@ -12,23 +19,37 @@ void setup()
   Serial.begin(115200);
   delay(100);
 
+  initLEDPins(pins, 2);
+  changeLEDState(powerIndicator, 1);
+
   initializeWifi();
   gpssetup();
 }
 
+unsigned long lastSendTime = 0;
+unsigned long lastGpsReadTime = 0;
+unsigned long currentTime = 0;
+
 
 void loop()
 {
+  currentTime = millis();
+
   gpsloop();
+  
+  if (currentTime - lastGpsReadTime > 1000) {
+    getLocation();
+    lastGpsReadTime = currentTime;
+  }
 
-  getLocation();
-  if (locationUpdated) {
+  if (locationUpdated && (currentTime - lastSendTime >= 30000)) {
     sendLocationData(locationData);
-
+    
+    lastSendTime = currentTime;
     locationUpdated = false;
   }
 
-  delay(30000);
+  // delay(30000);
 }
 
 

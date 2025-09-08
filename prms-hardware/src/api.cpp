@@ -104,6 +104,12 @@ void sendLocationData(location locData) {
 
   Serial.println(serializedPayload);
 
+  httpGETRequest("https://prms-qs5z.onrender.com/health");
   String endpoint = String(API_URL) + "/bus-nodes/" + String(BUS_ID) + "/location";
-  String response = httpPATCHRequest(endpoint, serializedPayload);
+
+  Serial.println(endpoint);
+  // String response = httpPATCHRequest(endpoint, serializedPayload);
+  String response = httpPOSTRequest(endpoint, serializedPayload);
+
+  // Return if success or not handle that case outisde, hence retry early
 };
