@@ -167,24 +167,25 @@ export const updateLocation = async (
       // only append if it is not same place (i.e not noise, put a threshold)
       let hasMovedEnough = true;
       if (trData.actual_path.length > 0) {
-        const THRESHOLD = 5; // meters
+        const THRESHOLD = 7; // meters
         hasMovedEnough =
           haversineDistance(
             location,
             trData.actual_path[trData.actual_path.length - 1]
           ) > THRESHOLD;
 
-        // console.log(
-        //   "HEYYYY88888",
-        //   trData.actual_path[trData.actual_path.length - 1],
-        //   haversineDistance(
-        //     location,
-        //     trData.actual_path[trData.actual_path.length - 1]
-        //   )
-        // );
+        console.log(
+          "HEYYYY88888",
+          trData.actual_path[trData.actual_path.length - 1],
+          haversineDistance(
+            location,
+            trData.actual_path[trData.actual_path.length - 1]
+          )
+        );
       }
 
       if (hasMovedEnough) {
+        console.log("PASSED");
         await tripsServices.editTrip(trData.id, {
           actual_path: [...trData.actual_path, location]
         });
