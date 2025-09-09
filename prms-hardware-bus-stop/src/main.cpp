@@ -9,11 +9,15 @@ LED_Struct powerIndicator(POWER_INDICATOR, 500);
 
 void setup(){
   Serial.begin(115200);
-  initializeWifi();
-  lcdSetup();
 
-  initLEDPins(pins, 1);
+  apiSetup();
+
+  lcdSetup();
+  
   changeLEDState(powerIndicator, 1);
+
+  initializeWifi();
+  initLEDPins(pins, 1);
 }
 
 void loop(){

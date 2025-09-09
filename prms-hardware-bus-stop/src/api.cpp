@@ -1,10 +1,20 @@
 #include "api.h"
 
+//  const int MAX_DATA_LENGTH = 15;
+
 int dataLength = 0;
 String busStopData[MAX_DATA_LENGTH];
 
+#include "api.h"
 
-void apiSetup();
+WiFiClientSecure *httpsClient = new WiFiClientSecure;
+WiFiClient *httpClient = new WiFiClient;
+
+void apiSetup() {
+  if (httpsClient) {
+    httpsClient->setInsecure();
+  }
+};
 
 String httpGETRequest(String apiURL) {
   String response = "{}";
@@ -12,11 +22,15 @@ String httpGETRequest(String apiURL) {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
   
-    http.begin(apiURL);
+    if (LOCAL_API) {
+      http.begin(*httpClient, apiURL);
+    } else {
+      http.begin(*httpsClient, apiURL);
+    }
   
     int httpResponseCode = http.GET();
   
-  
+    
     if (httpResponseCode > 0) {
       Serial.print("HTTP Response code: ");
       Serial.println(httpResponseCode);
@@ -38,10 +52,13 @@ String httpPOSTRequest(String apiURL, String payload) {
   String response = "{}";
 
   if (WiFi.status() == WL_CONNECTED) {
-    WiFiClient client;
     HTTPClient http;
 
-    http.begin(client, apiURL);
+    if (LOCAL_API) {
+      http.begin(*httpClient, apiURL);
+    } else {
+      http.begin(*httpsClient, apiURL);
+    }
 
     http.addHeader("Content-Type", "application/json");
     int httpResponseCode = http.POST(payload);
@@ -64,16 +81,17 @@ String httpPOSTRequest(String apiURL, String payload) {
   return response;
 };
 
-String httpPATCHRequest(String apiURL, String payload) {
-  // Serial.println("Sending PATCH to: " + apiURL);
-  
+String httpPATCHRequest(String apiURL, String payload) {  
   String response = "{}";
 
   if (WiFi.status() == WL_CONNECTED) {
-    WiFiClient client;
     HTTPClient http;
 
-    http.begin(client, apiURL);
+    if (LOCAL_API) {
+      http.begin(*httpClient, apiURL);
+    } else {
+      http.begin(*httpsClient, apiURL);
+    }
 
     http.addHeader("Content-Type", "application/json");
     int httpResponseCode = http.PATCH(payload);

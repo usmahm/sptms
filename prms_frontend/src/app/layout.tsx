@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PRMS",
-  description: "Public Road Transport Management System"
+  title: "SPTMS",
+  description: "Public Transportation Management System"
 };
 
 export default function RootLayout({

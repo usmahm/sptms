@@ -59,7 +59,7 @@ const SideNavBar: React.FC<PropType> = ({ unreadNotificationCount }) => {
       <div className="border-b-1 border-gray-200 p-6 flex items-center">
         <LogoIcon />
 
-        <h2 className="ml-3 font-bold text-xl text-slate-900">PRMS</h2>
+        <h2 className="ml-3 font-bold text-xl text-slate-900">SPTMS</h2>
       </div>
       <div className="px-6 py-4">
         {routes.map((route) => (
