@@ -37,9 +37,14 @@ It integrates **custom backend services**, **interactive web dashboards**, and *
 
 ---
 
-## 🗂️ Repository Structure
+## ⚠️ Disclaimer  
 
-Yeah, I know, monorepo isn't really okay for this, but as I am the only one working on this for now, I wanted to make life simple for myself🌚
+Yeah, I know, using a monorepo for backend, frontend, and hardware together isn’t the most ideal structure for long-term scalability.  
+But since I’m the only one working on this for now, I kept everything in a single repo to make life simple for myself 🌚.  
+
+---
+
+## 🗂️ Repository Structure
 
 ### 1. Backend (`/sptms-backend`)
 
