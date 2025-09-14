@@ -39,6 +39,15 @@ const nextConfig: NextConfig = {
     fileLoaderRule.exclude = /\.svg$/i;
 
     return config;
+  },
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/bus-stops",
+        permanent: true
+      }
+    ];
   }
 };
 
